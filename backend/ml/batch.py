@@ -27,7 +27,9 @@ class BatchPredictionEngine:
     def __init__(self, max_workers: int = 4):
         self.max_workers = max_workers
 
-    def load_dataset(self, file_source: Union[str, Path, bytes, io.BytesIO], file_type: str = "csv") -> pd.DataFrame:
+    def load_dataset(
+        self, file_source: Union[str, Path, bytes, io.BytesIO], file_type: str = "csv"
+    ) -> pd.DataFrame:
         """Load customer dataset from CSV, Parquet, or Excel."""
         if isinstance(file_source, (str, Path)):
             path_str = str(file_source).lower()
@@ -118,7 +120,9 @@ class BatchPredictionEngine:
                     res = future.result()
                 except Exception as e:
                     res = {
-                        "customer_id": str(records[idx].get("customer_id", f"ROW_{idx}")),
+                        "customer_id": str(
+                            records[idx].get("customer_id", f"ROW_{idx}")
+                        ),
                         "status": "error",
                         "error": str(e),
                     }
@@ -135,9 +139,21 @@ class BatchPredictionEngine:
         successful_count = len(successful_df)
         error_count = total_rows - successful_count
 
-        avg_churn = float(successful_df["churn_probability"].mean()) if successful_count > 0 else 0.0
-        avg_ltv = float(successful_df["predicted_ltv"].mean()) if successful_count > 0 else 0.0
-        high_risk_count = int((successful_df["risk_level"] == "High").sum()) if successful_count > 0 else 0
+        avg_churn = (
+            float(successful_df["churn_probability"].mean())
+            if successful_count > 0
+            else 0.0
+        )
+        avg_ltv = (
+            float(successful_df["predicted_ltv"].mean())
+            if successful_count > 0
+            else 0.0
+        )
+        high_risk_count = (
+            int((successful_df["risk_level"] == "High").sum())
+            if successful_count > 0
+            else 0
+        )
 
         summary = {
             "job_id": f"batch_{uuid.uuid4().hex[:8]}",
@@ -146,7 +162,9 @@ class BatchPredictionEngine:
             "successful_records": successful_count,
             "failed_records": error_count,
             "duration_seconds": round(elapsed_sec, 3),
-            "throughput_rps": round(total_rows / elapsed_sec, 2) if elapsed_sec > 0 else 0.0,
+            "throughput_rps": (
+                round(total_rows / elapsed_sec, 2) if elapsed_sec > 0 else 0.0
+            ),
             "avg_churn_probability": round(avg_churn, 4),
             "avg_predicted_ltv": round(avg_ltv, 2),
             "high_risk_customers": high_risk_count,

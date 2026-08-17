@@ -21,7 +21,6 @@ import pandas as pd
 from backend.core.logger import logger
 from backend.services.predict_service import predict_churn
 
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 INCOMING_DIR = BASE_DIR / "data" / "incoming"
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
@@ -115,11 +114,14 @@ def _append_or_update_report(scored_df: pd.DataFrame) -> None:
         combined = scored_df
 
     combined.to_csv(report_path, index=False)
-    logger.info(f"AutoIngestion: Updated {report_path.name} with {len(scored_df)} scored records.")
+    logger.info(
+        f"AutoIngestion: Updated {report_path.name} with {len(scored_df)} scored records."
+    )
 
 
-
-def process_subscriber_dataframe(df: pd.DataFrame, source_name: str) -> Tuple[int, int, List[Dict[str, Any]]]:
+def process_subscriber_dataframe(
+    df: pd.DataFrame, source_name: str
+) -> Tuple[int, int, List[Dict[str, Any]]]:
     """
     Validate, preprocess, score, and persist a subscriber dataframe.
     Returns (valid_count, failed_count, scored_results_list).
@@ -147,7 +149,9 @@ def process_subscriber_dataframe(df: pd.DataFrame, source_name: str) -> Tuple[in
         rec = row.to_dict()
         cid = str(rec.get(id_col, "")).strip()
         if not cid or cid.lower() in ["nan", "none", "null"]:
-            failed_rows.append({"record": rec, "reason": "Missing or invalid customer_id"})
+            failed_rows.append(
+                {"record": rec, "reason": "Missing or invalid customer_id"}
+            )
         else:
             rec["customer_id"] = cid
             valid_rows.append(rec)
@@ -215,7 +219,9 @@ def process_subscriber_dataframe(df: pd.DataFrame, source_name: str) -> Tuple[in
 
             # Recommendations
             if prob >= 0.61:
-                rec["primary_recommendation"] = "15% Contract Upgrade Discount + Priority Support"
+                rec["primary_recommendation"] = (
+                    "15% Contract Upgrade Discount + Priority Support"
+                )
                 rec["recommendation_priority"] = "Critical"
                 rec["estimated_revenue_saved"] = round(monthly * 12.0 * 0.7, 2)
             elif prob >= 0.40:
@@ -227,10 +233,14 @@ def process_subscriber_dataframe(df: pd.DataFrame, source_name: str) -> Tuple[in
                 rec["recommendation_priority"] = "Low"
                 rec["estimated_revenue_saved"] = 0.0
 
-            rec["rfm_persona"] = "High Spender" if monthly > 70.0 else "Regular Subscriber"
+            rec["rfm_persona"] = (
+                "High Spender" if monthly > 70.0 else "Regular Subscriber"
+            )
             scored_records.append(rec)
         except Exception as e:
-            logger.warning(f"AutoIngestion: Scoring failed for {rec.get('customer_id')}: {e}")
+            logger.warning(
+                f"AutoIngestion: Scoring failed for {rec.get('customer_id')}: {e}"
+            )
             failed_rows.append({"record": rec, "reason": str(e)})
 
     if scored_records:
@@ -239,12 +249,17 @@ def process_subscriber_dataframe(df: pd.DataFrame, source_name: str) -> Tuple[in
 
         now_iso = datetime.now(timezone.utc).isoformat()
         current_state = get_sync_state()
-        update_sync_state({
-            "last_auto_sync": now_iso,
-            "last_prediction_time": now_iso,
-            "records_processed_today": current_state.get("records_processed_today", 0) + len(scored_records),
-            "sync_status": "success",
-        })
+        update_sync_state(
+            {
+                "last_auto_sync": now_iso,
+                "last_prediction_time": now_iso,
+                "records_processed_today": current_state.get(
+                    "records_processed_today", 0
+                )
+                + len(scored_records),
+                "sync_status": "success",
+            }
+        )
 
     duration = time.time() - start_t
     log_import_event(
@@ -282,7 +297,9 @@ def scan_watch_folder() -> Dict[str, Any]:
 
         try:
             df = pd.read_csv(csv_path)
-            valid_c, fail_c, scored = process_subscriber_dataframe(df, source_name=f"watch_folder:{csv_path.name}")
+            valid_c, fail_c, scored = process_subscriber_dataframe(
+                df, source_name=f"watch_folder:{csv_path.name}"
+            )
 
             if valid_c > 0:
                 dest = PROCESSED_DIR / target_name
@@ -293,7 +310,9 @@ def scan_watch_folder() -> Dict[str, Any]:
                 dest = FAILED_DIR / target_name
                 shutil.move(str(csv_path), str(dest))
                 failed_count += 1
-                logger.warning(f"WatchFolder: Failed file {csv_path.name} -> {dest.name}")
+                logger.warning(
+                    f"WatchFolder: Failed file {csv_path.name} -> {dest.name}"
+                )
 
         except Exception as e:
             dest = FAILED_DIR / target_name
@@ -314,10 +333,13 @@ def scan_watch_folder() -> Dict[str, Any]:
             )
 
     state = get_sync_state()
-    update_sync_state({
-        "processed_file_count": state.get("processed_file_count", 0) + processed_count,
-        "failed_file_count": state.get("failed_file_count", 0) + failed_count,
-    })
+    update_sync_state(
+        {
+            "processed_file_count": state.get("processed_file_count", 0)
+            + processed_count,
+            "failed_file_count": state.get("failed_file_count", 0) + failed_count,
+        }
+    )
 
     return {
         "processed_files": processed_count,
@@ -364,18 +386,28 @@ def run_database_auto_sync() -> Dict[str, Any]:
 
             db.close()
             df = pd.DataFrame(records)
-            valid_c, fail_c, scored = process_subscriber_dataframe(df, source_name="db_auto_sync")
-            
+            valid_c, fail_c, scored = process_subscriber_dataframe(
+                df, source_name="db_auto_sync"
+            )
+
             duration = time.time() - start_t
             now_iso = datetime.now(timezone.utc).isoformat()
-            update_sync_state({
-                "last_auto_sync": now_iso,
+            update_sync_state(
+                {
+                    "last_auto_sync": now_iso,
+                    "sync_status": "success",
+                }
+            )
+            return {
                 "sync_status": "success",
-            })
-            return {"sync_status": "success", "processed": valid_c, "duration_sec": round(duration, 2)}
+                "processed": valid_c,
+                "duration_sec": round(duration, 2),
+            }
         except Exception as db_err:
             db.close()
-            logger.warning(f"DBAutoSync: Database query skipped (offline or empty): {db_err}")
+            logger.warning(
+                f"DBAutoSync: Database query skipped (offline or empty): {db_err}"
+            )
             return {"sync_status": "db_offline", "processed": 0}
     except Exception as e:
         logger.warning(f"DBAutoSync: Skipping DB sync: {e}")

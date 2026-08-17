@@ -228,6 +228,656 @@
       ],
       "notes": "Retrained automatically via pipeline (run_id=retrain_c99f4490).",
       "registered_at": "2026-07-28T13:55:43.341462+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.604.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8038,
+        "roc_auc": 0.8617,
+        "f1": 0.6455,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260811",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_a5424772).",
+      "registered_at": "2026-08-11T08:56:44.250901+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.181.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.795,
+        "roc_auc": 0.8617,
+        "f1": 0.6478,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260811",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_f9733275).",
+      "registered_at": "2026-08-11T14:23:01.075886+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.643.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8133,
+        "roc_auc": 0.8729,
+        "f1": 0.651,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260811",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_32e8b3f3).",
+      "registered_at": "2026-08-11T14:30:43.612032+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.905.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8056,
+        "roc_auc": 0.8739,
+        "f1": 0.6458,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260811",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_bb8d7e9c).",
+      "registered_at": "2026-08-11T14:35:05.239395+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.632.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8106,
+        "roc_auc": 0.8627,
+        "f1": 0.6626,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260811",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_6155204f).",
+      "registered_at": "2026-08-11T14:47:12.966151+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.747.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8049,
+        "roc_auc": 0.8739,
+        "f1": 0.6607,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_bf9968b8).",
+      "registered_at": "2026-08-12T05:15:47.127083+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.892.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8113,
+        "roc_auc": 0.8631,
+        "f1": 0.6521,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_d882c121).",
+      "registered_at": "2026-08-12T05:18:12.901222+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.597.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8033,
+        "roc_auc": 0.8701,
+        "f1": 0.6636,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_9a50952e).",
+      "registered_at": "2026-08-12T09:23:17.865215+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.683.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8013,
+        "roc_auc": 0.8692,
+        "f1": 0.648,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_26451978).",
+      "registered_at": "2026-08-12T09:41:23.759258+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.952.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8033,
+        "roc_auc": 0.87,
+        "f1": 0.6584,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_3daae7e1).",
+      "registered_at": "2026-08-12T09:45:52.875826+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.476.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.802,
+        "roc_auc": 0.8693,
+        "f1": 0.6462,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_52755fd0).",
+      "registered_at": "2026-08-12T09:54:36.779852+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.541.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8046,
+        "roc_auc": 0.8742,
+        "f1": 0.6491,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_9aae38d1).",
+      "registered_at": "2026-08-12T09:55:41.299345+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.305.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8042,
+        "roc_auc": 0.8732,
+        "f1": 0.6607,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_aa737d8f).",
+      "registered_at": "2026-08-12T10:08:25.661837+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.375.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8144,
+        "roc_auc": 0.86,
+        "f1": 0.6534,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_5b87f202).",
+      "registered_at": "2026-08-12T10:09:35.858949+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.435.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8023,
+        "roc_auc": 0.8612,
+        "f1": 0.6513,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_26dbda8d).",
+      "registered_at": "2026-08-12T10:10:35.044576+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.717.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.7999,
+        "roc_auc": 0.8604,
+        "f1": 0.6489,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260812",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_dc3e75be).",
+      "registered_at": "2026-08-12T13:18:37.955411+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.332.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8105,
+        "roc_auc": 0.8621,
+        "f1": 0.6561,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_32b8cb6c).",
+      "registered_at": "2026-08-14T03:32:12.145609+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.521.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8089,
+        "roc_auc": 0.8588,
+        "f1": 0.6572,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_4337374f).",
+      "registered_at": "2026-08-14T05:32:01.073721+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.779.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8089,
+        "roc_auc": 0.8744,
+        "f1": 0.647,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_b0c30258).",
+      "registered_at": "2026-08-14T06:59:39.246729+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.704.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8097,
+        "roc_auc": 0.8588,
+        "f1": 0.6591,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_f85427dc).",
+      "registered_at": "2026-08-14T18:55:04.748208+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.136.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.7989,
+        "roc_auc": 0.878,
+        "f1": 0.6613,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_3d942f27).",
+      "registered_at": "2026-08-14T19:02:16.324039+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.383.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8093,
+        "roc_auc": 0.8612,
+        "f1": 0.6623,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_f1ac4388).",
+      "registered_at": "2026-08-14T19:06:23.387929+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.315.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8084,
+        "roc_auc": 0.8635,
+        "f1": 0.6499,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_946adf81).",
+      "registered_at": "2026-08-14T19:21:55.307033+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.596.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8138,
+        "roc_auc": 0.8729,
+        "f1": 0.6501,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_1f674282).",
+      "registered_at": "2026-08-14T19:26:36.223312+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.893.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8127,
+        "roc_auc": 0.8644,
+        "f1": 0.6523,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260814",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_b72665f2).",
+      "registered_at": "2026-08-14T19:31:33.896426+00:00"
+    },
+    {
+      "model_name": "churn",
+      "version": "v1.503.0",
+      "model_type": "classifier",
+      "artifact_path": "artifacts/models/best_model.pkl",
+      "metrics": {
+        "accuracy": 0.8056,
+        "roc_auc": 0.8605,
+        "f1": 0.6607,
+        "brier_score": 0.158
+      },
+      "dataset_rows": 7045,
+      "dataset_version": "ds_20260817",
+      "feature_version": "v1.0",
+      "git_commit": "unknown",
+      "python_version": "unknown",
+      "optimal_threshold": null,
+      "status": "staging",
+      "tags": [
+        "test",
+        "continuous_retraining"
+      ],
+      "notes": "Retrained automatically via pipeline (run_id=retrain_538f8f87).",
+      "registered_at": "2026-08-17T09:05:03.579613+00:00"
     }
   ],
   "ltv": [

@@ -16,11 +16,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import joblib
+import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import shap
+
+# Import LightGBM and XGBoost safely
+import xgboost as xgb
 from scipy import stats
 from sklearn.calibration import calibration_curve
 from sklearn.compose import ColumnTransformer
@@ -46,10 +50,6 @@ from sklearn.model_selection import RandomizedSearchCV, learning_curve
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sqlalchemy import create_engine
-
-# Import LightGBM and XGBoost safely
-import xgboost as xgb
-import lightgbm as lgb
 
 # Configure matplotlib to run headlessly
 plt.switch_backend("Agg")
@@ -191,7 +191,13 @@ def get_preprocessor() -> ColumnTransformer:
         "streaming_tv",
         "streaming_movies",
     ]
-    binary_features = ["gender", "partner", "dependents", "phone_service", "paperless_billing"]
+    binary_features = [
+        "gender",
+        "partner",
+        "dependents",
+        "phone_service",
+        "paperless_billing",
+    ]
 
     numeric_transformer = Pipeline(
         steps=[
@@ -281,6 +287,7 @@ def evaluate_model(
     # Balanced accuracy calculation
     try:
         from sklearn.metrics import balanced_accuracy_score
+
         bal_acc = balanced_accuracy_score(y_test, y_pred)
     except Exception:
         pass
@@ -306,7 +313,9 @@ def evaluate_model(
     }
 
 
-def optimize_threshold(model: Any, X_val: np.ndarray, y_val: pd.Series) -> Tuple[float, pd.DataFrame]:
+def optimize_threshold(
+    model: Any, X_val: np.ndarray, y_val: pd.Series
+) -> Tuple[float, pd.DataFrame]:
     """
     Sweep thresholds from 0.0 to 1.0 to find the operating point maximizing F1 score.
     """
@@ -392,8 +401,15 @@ def save_diagnostic_plots(
     # 4. Calibration Curve
     plt.figure(figsize=(8, 6))
     for name, m_data in models_evaluated.items():
-        prob_true, prob_pred = calibration_curve(y_test, m_data["probabilities"], n_bins=10)
-        plt.plot(prob_pred, prob_true, marker="o", label=f"{name} (Brier = {m_data['brier_score']:.3f})")
+        prob_true, prob_pred = calibration_curve(
+            y_test, m_data["probabilities"], n_bins=10
+        )
+        plt.plot(
+            prob_pred,
+            prob_true,
+            marker="o",
+            label=f"{name} (Brier = {m_data['brier_score']:.3f})",
+        )
     plt.plot([0, 1], [0, 1], "k--")
     plt.title("Probability Calibration Curves")
     plt.xlabel("Mean Predicted Probability")
@@ -434,7 +450,7 @@ def save_diagnostic_plots(
         plt.figure(figsize=(10, 8))
         importances = best_model.feature_importances_
         indices = np.argsort(importances)[::-1][:15]  # Top 15 features
-        
+
         sns.barplot(x=importances[indices], y=[feature_names[i] for i in indices])
         plt.title("Top 15 Feature Importances")
         plt.xlabel("Relative Importance")
@@ -442,7 +458,9 @@ def save_diagnostic_plots(
         plt.close()
 
         # Save feature importances as CSV
-        feat_imp_df = pd.DataFrame({"feature": feature_names, "importance": importances})
+        feat_imp_df = pd.DataFrame(
+            {"feature": feature_names, "importance": importances}
+        )
         feat_imp_df = feat_imp_df.sort_values(by="importance", ascending=False)
         feat_imp_df.to_csv(REPORT_DIR / "feature_importance.csv", index=False)
 
@@ -465,25 +483,33 @@ def save_diagnostic_plots(
         os.makedirs(ARTIFACT_DIR / "shap", exist_ok=True)
         # Use a background test sample of 100 records for fast SHAP computation
         bg_sample = preprocessed_X_test[:100]
-        
+
         # Check model type to use tree or linear explainer
-        if "Forest" in str(type(best_model)) or "XGB" in str(type(best_model)) or "LGBM" in str(type(best_model)):
+        if (
+            "Forest" in str(type(best_model))
+            or "XGB" in str(type(best_model))
+            or "LGBM" in str(type(best_model))
+        ):
             explainer = shap.TreeExplainer(best_model)
             shap_values = explainer.shap_values(bg_sample)
         else:
             explainer = shap.Explainer(best_model, bg_sample)
             shap_values = explainer(bg_sample).values
-        
+
         # Handle SHAP multi-class dimensions
         if isinstance(shap_values, list):
-            shap_values_to_plot = shap_values[1] if len(shap_values) > 1 else shap_values[0]
+            shap_values_to_plot = (
+                shap_values[1] if len(shap_values) > 1 else shap_values[0]
+            )
         elif len(shap_values.shape) == 3:
             shap_values_to_plot = shap_values[:, :, 1]
         else:
             shap_values_to_plot = shap_values
 
         plt.figure()
-        shap.summary_plot(shap_values_to_plot, bg_sample, feature_names=feature_names, show=False)
+        shap.summary_plot(
+            shap_values_to_plot, bg_sample, feature_names=feature_names, show=False
+        )
         plt.savefig(PLOT_DIR / "shap_summary.png", bbox_inches="tight", dpi=150)
         plt.close()
 
@@ -491,7 +517,11 @@ def save_diagnostic_plots(
         plt.figure()
         single_expl = shap.Explanation(
             values=shap_values_to_plot[0],
-            base_values=explainer.expected_value[1] if isinstance(explainer.expected_value, (list, np.ndarray)) else explainer.expected_value,
+            base_values=(
+                explainer.expected_value[1]
+                if isinstance(explainer.expected_value, (list, np.ndarray))
+                else explainer.expected_value
+            ),
             data=bg_sample[0],
             feature_names=feature_names,
         )
@@ -531,34 +561,56 @@ def write_error_analysis_report(
         if len(df_err) == 0:
             return "No occurrences."
         out = []
-        out.append(f"  - Contract Type: {df_err['contract_type'].mode().get(0, 'Unknown')}")
-        out.append(f"  - Internet Service: {df_err['internet_service'].mode().get(0, 'Unknown')}")
-        out.append(f"  - Payment Method: {df_err['payment_method'].mode().get(0, 'Unknown')}")
+        out.append(
+            f"  - Contract Type: {df_err['contract_type'].mode().get(0, 'Unknown')}"
+        )
+        out.append(
+            f"  - Internet Service: {df_err['internet_service'].mode().get(0, 'Unknown')}"
+        )
+        out.append(
+            f"  - Payment Method: {df_err['payment_method'].mode().get(0, 'Unknown')}"
+        )
         out.append(f"  - Average Tenure: {df_err['tenure_months'].mean():.1f} months")
-        out.append(f"  - Average Monthly Charges: ${df_err['monthly_charges'].mean():.2f}")
+        out.append(
+            f"  - Average Monthly Charges: ${df_err['monthly_charges'].mean():.2f}"
+        )
         return "\n".join(out)
 
     with open(REPORT_DIR / "error_analysis.md", "w", encoding="utf-8") as f:
         f.write("# Error Analysis Report\n\n")
-        f.write(f"This report evaluates model classification failures across the test partition ({len(test_df)} customer accounts).\n\n")
-        
+        f.write(
+            f"This report evaluates model classification failures across the test partition ({len(test_df)} customer accounts).\n\n"
+        )
+
         f.write("## 1. Confusion Matrix Breakdown\n")
         f.write(f"- **True Positives (TP)**: {tp} (Correctly predicted churn)\n")
         f.write(f"- **True Negatives (TN)**: {tn} (Correctly predicted retention)\n")
-        f.write(f"- **False Positives (FP)**: {fp} (Predicted churn, customer stayed)\n")
-        f.write(f"- **False Negatives (FN)**: {fn} (Predicted stay, customer churned)\n\n")
+        f.write(
+            f"- **False Positives (FP)**: {fp} (Predicted churn, customer stayed)\n"
+        )
+        f.write(
+            f"- **False Negatives (FN)**: {fn} (Predicted stay, customer churned)\n\n"
+        )
 
         f.write("## 2. False Positive Profile (False Alarms)\n")
-        f.write("These customers were predicted to leave but remained. Proactive retention offers to this group would represent wasted expenditure:\n")
+        f.write(
+            "These customers were predicted to leave but remained. Proactive retention offers to this group would represent wasted expenditure:\n"
+        )
         f.write(f"{trait_summary(fps)}\n\n")
 
         f.write("## 3. False Negative Profile (Silent Churners)\n")
-        f.write("These customers were predicted to stay but cancelled their service. They represent our biggest revenue vulnerability:\n")
+        f.write(
+            "These customers were predicted to stay but cancelled their service. They represent our biggest revenue vulnerability:\n"
+        )
         f.write(f"{trait_summary(fns)}\n\n")
 
         f.write("## 4. Key Failure Takeaways\n")
-        f.write("- **Tenure Boundary Friction**: The majority of False Negatives occur around the **6-12 month tenure mark**, where short-term contracts are ending and onboarding loyalty incentives decay.\n")
-        f.write("- **Fiber Optic Pricing Friction**: High-bill Fiber Optic users show high counts in False Positives, indicating that while pricing models raise suspicion metrics, actual churn requires concurrent service dissatisfaction.\n")
+        f.write(
+            "- **Tenure Boundary Friction**: The majority of False Negatives occur around the **6-12 month tenure mark**, where short-term contracts are ending and onboarding loyalty incentives decay.\n"
+        )
+        f.write(
+            "- **Fiber Optic Pricing Friction**: High-bill Fiber Optic users show high counts in False Positives, indicating that while pricing models raise suspicion metrics, actual churn requires concurrent service dissatisfaction.\n"
+        )
 
 
 def write_training_summary(
@@ -580,14 +632,30 @@ def write_training_summary(
         f.write("## 📈 Performance Summary at Optimal Threshold\n")
         f.write("| Metric | Value | Description |\n")
         f.write("| --- | --- | --- |\n")
-        f.write(f"| Accuracy | {metrics['accuracy'] * 100:.2f}% | Overall correctness percentage |\n")
-        f.write(f"| Precision | {metrics['precision'] * 100:.2f}% | Proportion of positive predictions that are correct |\n")
-        f.write(f"| Recall | {metrics['recall'] * 100:.2f}% | Proportion of actual churners captured |\n")
-        f.write(f"| F1 Score | {metrics['f1'] * 100:.2f}% | Harmonic mean of Precision and Recall |\n")
-        f.write(f"| ROC-AUC | {metrics['roc_auc']:.4f} | Area under ROC Curve (discrimination index) |\n")
-        f.write(f"| PR-AUC | {metrics['pr_auc']:.4f} | Area under Precision-Recall Curve |\n")
-        f.write(f"| Brier Score Loss | {metrics['brier_score']:.4f} | Calibration error (lower is more reliable) |\n")
-        f.write(f"| Average Latency | {metrics['latency_ms']:.2f} ms | Milliseconds required to run preprocessing & inference per row |\n")
+        f.write(
+            f"| Accuracy | {metrics['accuracy'] * 100:.2f}% | Overall correctness percentage |\n"
+        )
+        f.write(
+            f"| Precision | {metrics['precision'] * 100:.2f}% | Proportion of positive predictions that are correct |\n"
+        )
+        f.write(
+            f"| Recall | {metrics['recall'] * 100:.2f}% | Proportion of actual churners captured |\n"
+        )
+        f.write(
+            f"| F1 Score | {metrics['f1'] * 100:.2f}% | Harmonic mean of Precision and Recall |\n"
+        )
+        f.write(
+            f"| ROC-AUC | {metrics['roc_auc']:.4f} | Area under ROC Curve (discrimination index) |\n"
+        )
+        f.write(
+            f"| PR-AUC | {metrics['pr_auc']:.4f} | Area under Precision-Recall Curve |\n"
+        )
+        f.write(
+            f"| Brier Score Loss | {metrics['brier_score']:.4f} | Calibration error (lower is more reliable) |\n"
+        )
+        f.write(
+            f"| Average Latency | {metrics['latency_ms']:.2f} ms | Milliseconds required to run preprocessing & inference per row |\n"
+        )
 
 
 def run_pipeline() -> None:
@@ -613,15 +681,20 @@ def run_pipeline() -> None:
     # 3. Splits
     # Target and predictor variables
     # Drop total_charges because total_charges_log is used, avoiding multicollinearity
-    X = df_engineered.drop(columns=["id", "customer_id", "churn", "total_charges"], errors="ignore")
+    X = df_engineered.drop(
+        columns=["id", "customer_id", "churn", "total_charges"], errors="ignore"
+    )
     y = df_engineered["churn"]
 
     # Stratified split 80/20
     from sklearn.model_selection import train_test_split
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42, stratify=y
     )
-    logger.info(f"Splitting Dataset: Train shape = {X_train.shape}, Test shape = {X_test.shape}")
+    logger.info(
+        f"Splitting Dataset: Train shape = {X_train.shape}, Test shape = {X_test.shape}"
+    )
 
     # 4. Preprocess Pipeline Fit
     preprocessor = get_preprocessor()
@@ -681,6 +754,7 @@ def run_pipeline() -> None:
 
     logger.info("Running Cross Validation...")
     from sklearn.model_selection import cross_validate
+
     for name, model in models.items():
         t0 = time.time()
         cv_res = cross_validate(
@@ -735,7 +809,9 @@ def run_pipeline() -> None:
         "colsample_bytree": [0.6, 0.8, 1.0],
     }
     xgb_search = RandomizedSearchCV(
-        xgb.XGBClassifier(scale_pos_weight=ratio, random_state=42, eval_metric="logloss"),
+        xgb.XGBClassifier(
+            scale_pos_weight=ratio, random_state=42, eval_metric="logloss"
+        ),
         param_distributions=xgb_grid,
         n_iter=5,
         cv=3,
@@ -748,7 +824,9 @@ def run_pipeline() -> None:
 
     # 7. Model Evaluation Comparison
     tuned_models = {
-        "Logistic Regression": models["Logistic Regression"].fit(preprocessed_X_train, y_train),
+        "Logistic Regression": models["Logistic Regression"].fit(
+            preprocessed_X_train, y_train
+        ),
         "Random Forest": best_rf,
         "XGBoost": best_xgb,
         "LightGBM": models["LightGBM"].fit(preprocessed_X_train, y_train),
@@ -760,7 +838,7 @@ def run_pipeline() -> None:
         # Save each model in registry
         model_filename = name.lower().replace(" ", "_") + ".pkl"
         joblib.dump(m, MODEL_REGISTRY / model_filename)
-        
+
         eval_metrics = evaluate_model(m, preprocessed_X_test, y_test)
         models_evaluated[name] = eval_metrics
 
@@ -807,6 +885,7 @@ def run_pipeline() -> None:
     # Generate metadata
     import platform
     import sysconfig
+
     import sklearn
 
     metadata = {
@@ -831,7 +910,12 @@ def run_pipeline() -> None:
     # Retrieve Git Commit if available
     try:
         import subprocess
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+
+        commit = (
+            subprocess.check_output(["git", "rev-parse", "HEAD"])
+            .decode("utf-8")
+            .strip()
+        )
         metadata["git_commit_hash"] = commit
     except Exception:
         metadata["git_commit_hash"] = "none"
@@ -855,9 +939,11 @@ def run_pipeline() -> None:
 
     # 11. Write documentation summary files
     write_error_analysis_report(y_test, final_metrics["predictions"], X_test)
-    
+
     train_duration = time.time() - t_start
-    write_training_summary(best_model_name, optimal_threshold, final_metrics, train_duration)
+    write_training_summary(
+        best_model_name, optimal_threshold, final_metrics, train_duration
+    )
 
     logger.info("Saving Best Model... Completed")
 

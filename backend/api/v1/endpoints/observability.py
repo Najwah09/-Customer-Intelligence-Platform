@@ -163,7 +163,9 @@ def get_sysinfo() -> JSONResponse:
 def get_scheduler_jobs() -> JSONResponse:
     """Return registered APScheduler jobs."""
     jobs = platform_scheduler.get_job_status()
-    return JSONResponse(content={
-        "scheduler_running": platform_scheduler.is_running,
-        "jobs": jobs,
-    })
+    return JSONResponse(
+        content={
+            "scheduler_running": platform_scheduler.is_running,
+            "jobs": jobs,
+        }
+    )

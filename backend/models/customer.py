@@ -6,6 +6,7 @@ Defines the normalized Customer model and associations.
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from backend.database.models import Base
 
 
@@ -30,9 +31,15 @@ class Customer(Base):
     churn = Column(Integer, index=True, nullable=False, default=0)
 
     # Foreign keys
-    contract_id = Column(Integer, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False)
-    service_id = Column(Integer, ForeignKey("services.id", ondelete="CASCADE"), nullable=False)
-    billing_id = Column(Integer, ForeignKey("billings.id", ondelete="CASCADE"), nullable=False)
+    contract_id = Column(
+        Integer, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    service_id = Column(
+        Integer, ForeignKey("services.id", ondelete="CASCADE"), nullable=False
+    )
+    billing_id = Column(
+        Integer, ForeignKey("billings.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Relationships
     contract = relationship("Contract")

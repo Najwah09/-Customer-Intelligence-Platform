@@ -9,8 +9,10 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict
+
 import numpy as np
 import pandas as pd
+
 from backend.core.logger import logger
 
 
@@ -59,19 +61,21 @@ class DataProfiler:
         for col in categorical_cols:
             # Handle list conversion cleanly
             val_counts = df[col].value_counts(dropna=False).head(10).to_dict()
-            categorical_summaries[col] = {
-                str(k): int(v) for k, v in val_counts.items()
-            }
+            categorical_summaries[col] = {str(k): int(v) for k, v in val_counts.items()}
 
         # Calculate shape, duplicates, and missingness ratio
         shape = df.shape
         missing_count = int(df.isnull().sum().sum())
         total_cells = int(df.size)
-        missing_percentage = float(missing_count / total_cells) if total_cells > 0 else 0.0
+        missing_percentage = (
+            float(missing_count / total_cells) if total_cells > 0 else 0.0
+        )
 
         # Handle customerID column duplicates check
-        id_col = "customerID" if "customerID" in df.columns else (
-            "customer_id" if "customer_id" in df.columns else None
+        id_col = (
+            "customerID"
+            if "customerID" in df.columns
+            else ("customer_id" if "customer_id" in df.columns else None)
         )
         duplicate_ids_count = 0
         if id_col is not None:
@@ -108,8 +112,12 @@ class DataProfiler:
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("# Raw Dataset Profile Overview\n\n")
                 f.write(f"- **Dimensions**: {shape[0]} rows, {shape[1]} columns\n")
-                f.write(f"- **Total Missing Cells**: {missing_count} ({missing_percentage:.2%})\n")
-                f.write(f"- **Duplicate Rows**: {report['duplicate_records']['total_duplicates']}\n")
+                f.write(
+                    f"- **Total Missing Cells**: {missing_count} ({missing_percentage:.2%})\n"
+                )
+                f.write(
+                    f"- **Duplicate Rows**: {report['duplicate_records']['total_duplicates']}\n"
+                )
                 f.write(f"- **Duplicate Customer IDs**: {duplicate_ids_count}\n\n")
                 f.write("## Numeric Summary\n")
                 for col, stats in numeric_summaries.items():

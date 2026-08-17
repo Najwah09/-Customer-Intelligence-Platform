@@ -5,8 +5,8 @@ Records prediction requests, model versions, predictions, latencies, feature has
 and request correlation IDs for auditability, model monitoring, and replay.
 """
 
-import json
 import hashlib
+import json
 import os
 import threading
 from datetime import datetime, timezone
@@ -81,7 +81,10 @@ class PredictionStore:
                         if line.strip():
                             try:
                                 item = json.loads(line)
-                                if customer_id is None or item.get("customer_id") == customer_id:
+                                if (
+                                    customer_id is None
+                                    or item.get("customer_id") == customer_id
+                                ):
                                     records.append(item)
                             except Exception:
                                 pass
@@ -104,9 +107,17 @@ class PredictionStore:
             }
 
         total = len(history)
-        churn_probs = [r["churn_probability"] for r in history if r.get("churn_probability") is not None]
-        ltvs = [r["predicted_ltv"] for r in history if r.get("predicted_ltv") is not None]
-        latencies = [r["latency_ms"] for r in history if r.get("latency_ms") is not None]
+        churn_probs = [
+            r["churn_probability"]
+            for r in history
+            if r.get("churn_probability") is not None
+        ]
+        ltvs = [
+            r["predicted_ltv"] for r in history if r.get("predicted_ltv") is not None
+        ]
+        latencies = [
+            r["latency_ms"] for r in history if r.get("latency_ms") is not None
+        ]
 
         risk_counts: Dict[str, int] = {}
         for r in history:
@@ -115,9 +126,13 @@ class PredictionStore:
 
         return {
             "total_stored_predictions": total,
-            "avg_churn_probability": round(sum(churn_probs) / len(churn_probs), 4) if churn_probs else 0.0,
+            "avg_churn_probability": (
+                round(sum(churn_probs) / len(churn_probs), 4) if churn_probs else 0.0
+            ),
             "avg_ltv": round(sum(ltvs) / len(ltvs), 2) if ltvs else 0.0,
-            "avg_latency_ms": round(sum(latencies) / len(latencies), 2) if latencies else 0.0,
+            "avg_latency_ms": (
+                round(sum(latencies) / len(latencies), 2) if latencies else 0.0
+            ),
             "risk_breakdown": risk_counts,
         }
 

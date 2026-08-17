@@ -9,20 +9,21 @@ Exposes endpoints for:
 """
 
 from typing import Any, Dict, List
-from fastapi import APIRouter, Depends, HTTPException, status
+
 import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.database.database import get_db
-from backend.services.ingestion_service import IngestionService
-from backend.services.auto_ingestion import (
-    process_subscriber_dataframe,
-    get_sync_state,
-    scan_watch_folder,
-)
+from backend.ml.extractor import DataExtractor
 from backend.models.customer import Customer
 from backend.models.import_history import ImportHistory
-from backend.ml.extractor import DataExtractor
+from backend.services.auto_ingestion import (
+    get_sync_state,
+    process_subscriber_dataframe,
+    scan_watch_folder,
+)
+from backend.services.ingestion_service import IngestionService
 
 router = APIRouter()
 
@@ -40,8 +41,7 @@ def run_ingestion(db: Session = Depends(get_db)) -> Dict[str, Any]:
 
     if result.get("status") == "failed":
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=result
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=result
         )
 
     return result
@@ -64,7 +64,7 @@ def ingest_single_record(record: Dict[str, Any]) -> Dict[str, Any]:
     if not scored:
         raise HTTPException(
             status_code=422,
-            detail="Failed to validate or score provided subscriber record."
+            detail="Failed to validate or score provided subscriber record.",
         )
 
     return {

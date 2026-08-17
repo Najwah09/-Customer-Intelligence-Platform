@@ -10,7 +10,9 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, Tuple
+
 import pandas as pd
+
 from backend.core.logger import logger
 
 
@@ -81,18 +83,24 @@ class DataCleaner:
         duplicates_removed = int(clean_df.duplicated(subset=["customer_id"]).sum())
         if duplicates_removed > 0:
             clean_df = clean_df.drop_duplicates(subset=["customer_id"], keep="first")
-            logger.info(f"Cleaning stage: Removed {duplicates_removed} duplicate customer records.")
+            logger.info(
+                f"Cleaning stage: Removed {duplicates_removed} duplicate customer records."
+            )
 
         # 4. Data Type conversions and missing values resolution
         # Convert total_charges to float, coercing empty spaces to NaN
-        clean_df["total_charges"] = pd.to_numeric(clean_df["total_charges"], errors="coerce")
+        clean_df["total_charges"] = pd.to_numeric(
+            clean_df["total_charges"], errors="coerce"
+        )
 
         # In Telco Churn, missing total charges correspond exactly to tenure = 0.
         # Impute missing total charges to 0.0 where tenure is 0.
         missing_total_charges = int(clean_df["total_charges"].isnull().sum())
         imputed_count = 0
         if missing_total_charges > 0:
-            zero_tenure_mask = (clean_df["tenure_months"] == 0) & (clean_df["total_charges"].isnull())
+            zero_tenure_mask = (clean_df["tenure_months"] == 0) & (
+                clean_df["total_charges"].isnull()
+            )
             imputed_count = int(zero_tenure_mask.sum())
             clean_df.loc[zero_tenure_mask, "total_charges"] = 0.0
 
@@ -100,9 +108,13 @@ class DataCleaner:
             remaining_nans_mask = clean_df["total_charges"].isnull()
             remaining_nans_count = int(remaining_nans_mask.sum())
             if remaining_nans_count > 0:
-                clean_df.loc[remaining_nans_mask, "total_charges"] = clean_df.loc[remaining_nans_mask, "monthly_charges"]
+                clean_df.loc[remaining_nans_mask, "total_charges"] = clean_df.loc[
+                    remaining_nans_mask, "monthly_charges"
+                ]
                 imputed_count += remaining_nans_count
-            logger.info(f"Cleaning stage: Imputed {imputed_count} missing values in 'total_charges'.")
+            logger.info(
+                f"Cleaning stage: Imputed {imputed_count} missing values in 'total_charges'."
+            )
 
         # Convert Churn from "Yes"/"No" to 1/0
         clean_df["churn"] = clean_df["churn"].map({"Yes": 1, "No": 0})
@@ -111,7 +123,9 @@ class DataCleaner:
         if invalid_churn_count > 0:
             clean_df = clean_df.dropna(subset=["churn"])
             clean_df["churn"] = clean_df["churn"].astype(int)
-            logger.warning(f"Cleaning stage: Dropped {invalid_churn_count} records due to invalid/missing churn values.")
+            logger.warning(
+                f"Cleaning stage: Dropped {invalid_churn_count} records due to invalid/missing churn values."
+            )
 
         # Force correct types
         clean_df["senior_citizen"] = clean_df["senior_citizen"].astype(int)

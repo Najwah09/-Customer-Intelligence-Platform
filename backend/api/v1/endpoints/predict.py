@@ -5,6 +5,7 @@ Exposes REST APIs to score customer records and fetch explainability coefficient
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from backend.schemas.customer import (
     CustomerPredictRequest,
     CustomerPredictResponse,

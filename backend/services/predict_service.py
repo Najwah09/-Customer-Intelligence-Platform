@@ -109,13 +109,30 @@ class PredictService:
         self.metadata = load_metadata()
         self.threshold = self.metadata.get("optimal_threshold", 0.5)
         # Extract features expected by the preprocessing pipeline
-        self.feature_columns = self.metadata.get("features", [
-            "gender", "senior_citizen", "partner", "dependents", "tenure_months",
-            "phone_service", "multiple_lines", "internet_service", "online_security",
-            "online_backup", "device_protection", "tech_support", "streaming_tv",
-            "streaming_movies", "contract_type", "paperless_billing", "payment_method",
-            "monthly_charges", "total_charges"
-        ])
+        self.feature_columns = self.metadata.get(
+            "features",
+            [
+                "gender",
+                "senior_citizen",
+                "partner",
+                "dependents",
+                "tenure_months",
+                "phone_service",
+                "multiple_lines",
+                "internet_service",
+                "online_security",
+                "online_backup",
+                "device_protection",
+                "tech_support",
+                "streaming_tv",
+                "streaming_movies",
+                "contract_type",
+                "paperless_billing",
+                "payment_method",
+                "monthly_charges",
+                "total_charges",
+            ],
+        )
 
     def predict_proba(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -129,11 +146,19 @@ class PredictService:
 
         # Cast charges to float
         if "total_charges" in df_raw.columns:
-            df_raw["total_charges"] = pd.to_numeric(df_raw["total_charges"], errors="coerce").fillna(0.0)
+            df_raw["total_charges"] = pd.to_numeric(
+                df_raw["total_charges"], errors="coerce"
+            ).fillna(0.0)
         if "monthly_charges" in df_raw.columns:
-            df_raw["monthly_charges"] = pd.to_numeric(df_raw["monthly_charges"], errors="coerce").fillna(0.0)
+            df_raw["monthly_charges"] = pd.to_numeric(
+                df_raw["monthly_charges"], errors="coerce"
+            ).fillna(0.0)
         if "tenure_months" in df_raw.columns:
-            df_raw["tenure_months"] = pd.to_numeric(df_raw["tenure_months"], errors="coerce").fillna(0).astype(int)
+            df_raw["tenure_months"] = (
+                pd.to_numeric(df_raw["tenure_months"], errors="coerce")
+                .fillna(0)
+                .astype(int)
+            )
 
         # 2. Engineer features
         df_eng = engineer_features(df_raw)
@@ -214,6 +239,7 @@ def get_predict_service() -> PredictService:
 def predict_churn(sample: Dict[str, Any]) -> Dict[str, Any]:
     """Module-level helper to score customer churn."""
     from backend.ml.feature_store import feature_store
+
     full_sample = feature_store.apply_defaults(sample)
 
     service = get_predict_service()
@@ -222,7 +248,9 @@ def predict_churn(sample: Dict[str, Any]) -> Dict[str, Any]:
     prob = res.get("probability", 0.0)
     pred = res.get("prediction", 0)
     risk = res.get("risk_level", "Low")
-    ltv = float(full_sample.get("monthly_charges", 65.0)) * max(1, float(full_sample.get("tenure_months", 12)))
+    ltv = float(full_sample.get("monthly_charges", 65.0)) * max(
+        1, float(full_sample.get("tenure_months", 12))
+    )
     return {
         "churn_probability": prob,
         "churn_prediction": pred,
@@ -230,6 +258,7 @@ def predict_churn(sample: Dict[str, Any]) -> Dict[str, Any]:
         "segment": "Standard",
         "predicted_ltv": ltv,
         "intelligence_score": round((1.0 - prob) * 100, 1),
-        "recommendations": {"action": "Proactive Retention" if pred == 1 else "Standard Support"},
+        "recommendations": {
+            "action": "Proactive Retention" if pred == 1 else "Standard Support"
+        },
     }
-

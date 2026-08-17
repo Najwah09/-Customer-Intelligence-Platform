@@ -18,20 +18,24 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import joblib
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from scipy import stats
 from sklearn.cluster import KMeans
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, silhouette_score
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+    silhouette_score,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-import xgboost as xgb
-import lightgbm as lgb
 
 from backend.core.logger import logger
 from backend.core.settings import settings
@@ -61,31 +65,81 @@ def train_ltv_models(df: pd.DataFrame) -> Tuple[Any, Dict[str, Any], pd.DataFram
     """
     logger.info("LTV Pipeline: Starting regression model training.")
 
-    X = df.drop(columns=["id", "customer_id", "total_charges", "total_charges_log", "churn"], errors="ignore")
+    X = df.drop(
+        columns=["id", "customer_id", "total_charges", "total_charges_log", "churn"],
+        errors="ignore",
+    )
     y = df["total_charges"]
 
     # Train/test split 80/20
     from sklearn.model_selection import train_test_split
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42
     )
 
     # Set up preprocessing
-    numeric_features = ["tenure_months", "monthly_charges", "charges_ratio", "total_services"]
-    categorical_features = [
-        "contract_type", "payment_method", "internet_service", "tenure_group",
-        "multiple_lines", "online_security", "online_backup", "device_protection",
-        "tech_support", "streaming_tv", "streaming_movies"
+    numeric_features = [
+        "tenure_months",
+        "monthly_charges",
+        "charges_ratio",
+        "total_services",
     ]
-    binary_features = ["gender", "partner", "dependents", "phone_service", "paperless_billing"]
+    categorical_features = [
+        "contract_type",
+        "payment_method",
+        "internet_service",
+        "tenure_group",
+        "multiple_lines",
+        "online_security",
+        "online_backup",
+        "device_protection",
+        "tech_support",
+        "streaming_tv",
+        "streaming_movies",
+    ]
+    binary_features = [
+        "gender",
+        "partner",
+        "dependents",
+        "phone_service",
+        "paperless_billing",
+    ]
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", Pipeline([("imp", SimpleImputer(strategy="median")), ("scl", StandardScaler())]), numeric_features),
-            ("cat", Pipeline([("imp", SimpleImputer(strategy="most_frequent")), ("ohe", OneHotEncoder(handle_unknown="ignore"))]), categorical_features),
-            ("bin", Pipeline([("imp", SimpleImputer(strategy="most_frequent")), ("ohe", OneHotEncoder(handle_unknown="ignore"))]), binary_features),
+            (
+                "num",
+                Pipeline(
+                    [
+                        ("imp", SimpleImputer(strategy="median")),
+                        ("scl", StandardScaler()),
+                    ]
+                ),
+                numeric_features,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    [
+                        ("imp", SimpleImputer(strategy="most_frequent")),
+                        ("ohe", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                categorical_features,
+            ),
+            (
+                "bin",
+                Pipeline(
+                    [
+                        ("imp", SimpleImputer(strategy="most_frequent")),
+                        ("ohe", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                binary_features,
+            ),
         ],
-        remainder="drop"
+        remainder="drop",
     )
 
     # Fit preprocessor
@@ -95,9 +149,24 @@ def train_ltv_models(df: pd.DataFrame) -> Tuple[Any, Dict[str, Any], pd.DataFram
     # Regressors
     models = {
         "Linear Regression": LinearRegression(),
-        "Random Forest Regressor": RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1),
-        "XGBoost Regressor": xgb.XGBRegressor(n_estimators=100, max_depth=5, learning_rate=0.05, random_state=42, n_jobs=-1),
-        "LightGBM Regressor": lgb.LGBMRegressor(n_estimators=100, max_depth=5, learning_rate=0.05, random_state=42, n_jobs=-1, verbosity=-1),
+        "Random Forest Regressor": RandomForestRegressor(
+            n_estimators=100, max_depth=10, random_state=42, n_jobs=-1
+        ),
+        "XGBoost Regressor": xgb.XGBRegressor(
+            n_estimators=100,
+            max_depth=5,
+            learning_rate=0.05,
+            random_state=42,
+            n_jobs=-1,
+        ),
+        "LightGBM Regressor": lgb.LGBMRegressor(
+            n_estimators=100,
+            max_depth=5,
+            learning_rate=0.05,
+            random_state=42,
+            n_jobs=-1,
+            verbosity=-1,
+        ),
     }
 
     comparison_records = []
@@ -114,14 +183,16 @@ def train_ltv_models(df: pd.DataFrame) -> Tuple[Any, Dict[str, Any], pd.DataFram
         mape = calculate_mape(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
 
-        comparison_records.append({
-            "Model": name,
-            "RMSE": rmse,
-            "MAE": mae,
-            "MAPE": mape,
-            "R2": r2,
-            "Training Time (s)": duration
-        })
+        comparison_records.append(
+            {
+                "Model": name,
+                "RMSE": rmse,
+                "MAE": mae,
+                "MAPE": mape,
+                "R2": r2,
+                "Training Time (s)": duration,
+            }
+        )
         trained_models[name] = model
 
     comp_df = pd.DataFrame(comparison_records)
@@ -133,28 +204,36 @@ def train_ltv_models(df: pd.DataFrame) -> Tuple[Any, Dict[str, Any], pd.DataFram
     logger.info(f"LTV Pipeline: Best regressor model chosen: {best_model_name}")
 
     # Build LTV pipeline (preprocessor + model)
-    ltv_pipeline = Pipeline([
-        ("preprocessor", preprocessor),
-        ("regressor", best_model)
-    ])
+    ltv_pipeline = Pipeline([("preprocessor", preprocessor), ("regressor", best_model)])
 
-    return ltv_pipeline, {
-        "best_model": best_model_name,
-        "rmse": float(comp_df.iloc[0]["RMSE"]),
-        "mae": float(comp_df.iloc[0]["MAE"]),
-        "mape": float(comp_df.iloc[0]["MAPE"]),
-        "r2": float(comp_df.iloc[0]["R2"]),
-        "trained_at": datetime.utcnow().isoformat() + "Z"
-    }, comp_df
+    return (
+        ltv_pipeline,
+        {
+            "best_model": best_model_name,
+            "rmse": float(comp_df.iloc[0]["RMSE"]),
+            "mae": float(comp_df.iloc[0]["MAE"]),
+            "mape": float(comp_df.iloc[0]["MAPE"]),
+            "r2": float(comp_df.iloc[0]["R2"]),
+            "trained_at": datetime.utcnow().isoformat() + "Z",
+        },
+        comp_df,
+    )
 
 
-def run_customer_segmentation(df: pd.DataFrame) -> Tuple[Any, pd.DataFrame, pd.DataFrame]:
+def run_customer_segmentation(
+    df: pd.DataFrame,
+) -> Tuple[Any, pd.DataFrame, pd.DataFrame]:
     """
     Run K-Means Customer Clustering.
     """
     logger.info("Segmentation Pipeline: Running clustering calculations.")
 
-    numeric_cols = ["tenure_months", "monthly_charges", "total_services", "charges_ratio"]
+    numeric_cols = [
+        "tenure_months",
+        "monthly_charges",
+        "total_services",
+        "charges_ratio",
+    ]
     X = df[numeric_cols].copy()
 
     # Preprocess
@@ -184,30 +263,38 @@ def run_customer_segmentation(df: pd.DataFrame) -> Tuple[Any, pd.DataFrame, pd.D
     kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
     df_labels = kmeans.fit_predict(X_scaled)
 
-    segmentation_pipeline = Pipeline([
-        ("scaler", scaler),
-        ("kmeans", kmeans)
-    ])
+    segmentation_pipeline = Pipeline([("scaler", scaler), ("kmeans", kmeans)])
 
     # Assign business labels based on median monetary spend (total_charges)
     df_temp = df.copy()
     df_temp["cluster_raw"] = df_labels
 
-    cluster_charges = df_temp.groupby("cluster_raw")["total_charges"].median().sort_values(ascending=False)
+    cluster_charges = (
+        df_temp.groupby("cluster_raw")["total_charges"]
+        .median()
+        .sort_values(ascending=False)
+    )
     # Segment ranking: High-Value, Loyal, Growth, Budget
-    segment_names = ["High-Value Subscribers", "Loyal Subscribers", "Growth Subscribers", "Budget Subscribers"]
+    segment_names = [
+        "High-Value Subscribers",
+        "Loyal Subscribers",
+        "Growth Subscribers",
+        "Budget Subscribers",
+    ]
     cluster_mapping = {}
     for idx, (cluster_id, _) in enumerate(cluster_charges.items()):
         # Fallback names if optimal_k > 4
-        name = segment_names[idx] if idx < len(segment_names) else f"Budget Subscribers Class {idx - 2}"
+        name = (
+            segment_names[idx]
+            if idx < len(segment_names)
+            else f"Budget Subscribers Class {idx - 2}"
+        )
         cluster_mapping[cluster_id] = name
 
     # Silhouette statistics dataframe
-    stats_k_df = pd.DataFrame({
-        "k": list(k_range),
-        "inertia": inertias,
-        "silhouette_score": silhouettes
-    })
+    stats_k_df = pd.DataFrame(
+        {"k": list(k_range), "inertia": inertias, "silhouette_score": silhouettes}
+    )
 
     return segmentation_pipeline, stats_k_df, pd.Series(df_labels).map(cluster_mapping)
 
@@ -225,19 +312,25 @@ def calculate_rfm(df: pd.DataFrame, churn_probs: np.ndarray) -> pd.DataFrame:
     # 1. Recency Score (1-5): High stay probability = High recency score
     stay_prob = 1.0 - churn_probs
     try:
-        df_rfm["R_score"] = pd.qcut(stay_prob, q=5, labels=[1, 2, 3, 4, 5], duplicates="drop")
+        df_rfm["R_score"] = pd.qcut(
+            stay_prob, q=5, labels=[1, 2, 3, 4, 5], duplicates="drop"
+        )
     except Exception:
         df_rfm["R_score"] = pd.cut(stay_prob, bins=5, labels=[1, 2, 3, 4, 5])
 
     # 2. Frequency Score (1-5): Binned from tenure_months
     try:
-        df_rfm["F_score"] = pd.qcut(df["tenure_months"], q=5, labels=[1, 2, 3, 4, 5], duplicates="drop")
+        df_rfm["F_score"] = pd.qcut(
+            df["tenure_months"], q=5, labels=[1, 2, 3, 4, 5], duplicates="drop"
+        )
     except Exception:
         df_rfm["F_score"] = pd.cut(df["tenure_months"], bins=5, labels=[1, 2, 3, 4, 5])
 
     # 3. Monetary Score (1-5): Binned from total_charges
     try:
-        df_rfm["M_score"] = pd.qcut(df["total_charges"], q=5, labels=[1, 2, 3, 4, 5], duplicates="drop")
+        df_rfm["M_score"] = pd.qcut(
+            df["total_charges"], q=5, labels=[1, 2, 3, 4, 5], duplicates="drop"
+        )
     except Exception:
         df_rfm["M_score"] = pd.cut(df["total_charges"], bins=5, labels=[1, 2, 3, 4, 5])
 
@@ -247,7 +340,9 @@ def calculate_rfm(df: pd.DataFrame, churn_probs: np.ndarray) -> pd.DataFrame:
     df_rfm["M_score"] = df_rfm["M_score"].astype(int)
 
     # Combined RFM Score
-    df_rfm["rfm_score"] = df_rfm["R_score"] * 100 + df_rfm["F_score"] * 10 + df_rfm["M_score"]
+    df_rfm["rfm_score"] = (
+        df_rfm["R_score"] * 100 + df_rfm["F_score"] * 10 + df_rfm["M_score"]
+    )
 
     # Assign Telecom Personas
     def assign_persona(row) -> str:
@@ -274,7 +369,7 @@ def calculate_intelligence_score(
     predicted_ltv: float,
     tenure: int,
     services_count: int,
-    max_ltv: float = 8500.0
+    max_ltv: float = 8500.0,
 ) -> Tuple[float, str]:
     """
     Calculate composite Telecom Subscriber Intelligence Score (0-100) using configurable weights.
@@ -289,7 +384,7 @@ def calculate_intelligence_score(
             "churn_weight": 0.30,
             "ltv_weight": 0.30,
             "tenure_weight": 0.20,
-            "services_weight": 0.20
+            "services_weight": 0.20,
         }
 
     # Normalize metrics to 0-100
@@ -301,10 +396,10 @@ def calculate_intelligence_score(
     s_score = min(100.0, (services_count / 8.0) * 100)
 
     score = (
-        weights["churn_weight"] * c_score +
-        weights["ltv_weight"] * l_score +
-        weights["tenure_weight"] * t_score +
-        weights["services_weight"] * s_score
+        weights["churn_weight"] * c_score
+        + weights["ltv_weight"] * l_score
+        + weights["tenure_weight"] * t_score
+        + weights["services_weight"] * s_score
     )
     score = float(np.clip(score, 0.0, 100.0))
 
@@ -328,7 +423,7 @@ def generate_recommendation_details(
     predicted_ltv: float,
     segment: str,
     persona: str,
-    shap_top_contrib: str = ""
+    shap_top_contrib: str = "",
 ) -> List[Dict[str, Any]]:
     """
     Telecom Hybrid Retention Recommendation Engine with SHAP annotations and estimated revenue saved.
@@ -337,92 +432,119 @@ def generate_recommendation_details(
 
     # Helper traits
     contract = str(sample.get("contract_type", sample.get("Contract", ""))).strip()
-    tech_support = str(sample.get("tech_support", sample.get("TechSupport", ""))).strip()
-    internet = str(sample.get("internet_service", sample.get("InternetService", ""))).strip()
-    is_auto = 1 if "automatic" in str(sample.get("payment_method", sample.get("PaymentMethod", ""))).lower() else 0
+    tech_support = str(
+        sample.get("tech_support", sample.get("TechSupport", ""))
+    ).strip()
+    internet = str(
+        sample.get("internet_service", sample.get("InternetService", ""))
+    ).strip()
+    is_auto = (
+        1
+        if "automatic"
+        in str(sample.get("payment_method", sample.get("PaymentMethod", ""))).lower()
+        else 0
+    )
     tenure = int(sample.get("tenure_months", sample.get("tenure", 0)))
     total_services = int(sample.get("total_services", 0))
 
     # 1. Rule 1: High Churn Risk + High Value -> Executive Retention & Fiber Upgrade Pack
     if churn_prob >= 0.40 and predicted_ltv >= 3500.0:
         revenue_saved = float(churn_prob * predicted_ltv)
-        recs.append({
-            "recommendation": "Offer Executive Retention & Fiber Upgrade Pack",
-            "priority": "Critical",
-            "confidence": float(churn_prob),
-            "reason": [
-                "Subscriber has High Churn Risk (" + f"{churn_prob*100:.1f}%" + ")",
-                "High subscriber lifetime valuation (" + f"${predicted_ltv:.2f}" + ")",
-                f"SHAP indicator highlights key churn driver: {shap_top_contrib}" if shap_top_contrib else "High value subscriber retention target"
-            ],
-            "estimated_revenue_saved": revenue_saved
-        })
+        recs.append(
+            {
+                "recommendation": "Offer Executive Retention & Fiber Upgrade Pack",
+                "priority": "Critical",
+                "confidence": float(churn_prob),
+                "reason": [
+                    "Subscriber has High Churn Risk (" + f"{churn_prob*100:.1f}%" + ")",
+                    "High subscriber lifetime valuation ("
+                    + f"${predicted_ltv:.2f}"
+                    + ")",
+                    (
+                        f"SHAP indicator highlights key churn driver: {shap_top_contrib}"
+                        if shap_top_contrib
+                        else "High value subscriber retention target"
+                    ),
+                ],
+                "estimated_revenue_saved": revenue_saved,
+            }
+        )
 
     # 2. Rule 2: Month-to-Month Contract -> Offer Annual Contract Migration Discount
     if "month-to-month" in contract.lower():
         revenue_saved = float(churn_prob * predicted_ltv * 0.45)
-        recs.append({
-            "recommendation": "Offer Annual Contract Migration Discount",
-            "priority": "High",
-            "confidence": 0.85,
-            "reason": [
-                "Flexible Month-to-month contract structure is active",
-                "Migrating to 1-year telecom contract reduces churn probability by over 70%"
-            ],
-            "estimated_revenue_saved": revenue_saved
-        })
+        recs.append(
+            {
+                "recommendation": "Offer Annual Contract Migration Discount",
+                "priority": "High",
+                "confidence": 0.85,
+                "reason": [
+                    "Flexible Month-to-month contract structure is active",
+                    "Migrating to 1-year telecom contract reduces churn probability by over 70%",
+                ],
+                "estimated_revenue_saved": revenue_saved,
+            }
+        )
 
     # 3. Rule 3: Low Support Add-ons -> Offer Priority Telecom Tech Support
     if "no" in tech_support.lower() and "no" not in internet.lower():
         revenue_saved = float(churn_prob * predicted_ltv * 0.15)
-        recs.append({
-            "recommendation": "Offer Priority Telecom Tech Support",
-            "priority": "Medium",
-            "confidence": 0.70,
-            "reason": [
-                "High-speed internet is active but subscriber lacks Tech Support add-ons",
-                "Tech support subscribers exhibit a 60% reduction in attrition rates"
-            ],
-            "estimated_revenue_saved": revenue_saved
-        })
+        recs.append(
+            {
+                "recommendation": "Offer Priority Telecom Tech Support",
+                "priority": "Medium",
+                "confidence": 0.70,
+                "reason": [
+                    "High-speed internet is active but subscriber lacks Tech Support add-ons",
+                    "Tech support subscribers exhibit a 60% reduction in attrition rates",
+                ],
+                "estimated_revenue_saved": revenue_saved,
+            }
+        )
 
     # 4. Rule 4: Low service bundling -> Offer Multi-Service OTT & Security Bundle
     if total_services <= 2 and "no" not in internet.lower():
         revenue_saved = float(churn_prob * predicted_ltv * 0.10)
-        recs.append({
-            "recommendation": "Offer Multi-Service OTT & Security Bundle",
-            "priority": "Low",
-            "confidence": 0.60,
-            "reason": [
-                f"Active account has low service density ({total_services} services)",
-                "Bundling OTT entertainment, online backup, or security creates subscriber stickiness"
-            ],
-            "estimated_revenue_saved": revenue_saved
-        })
+        recs.append(
+            {
+                "recommendation": "Offer Multi-Service OTT & Security Bundle",
+                "priority": "Low",
+                "confidence": 0.60,
+                "reason": [
+                    f"Active account has low service density ({total_services} services)",
+                    "Bundling OTT entertainment, online backup, or security creates subscriber stickiness",
+                ],
+                "estimated_revenue_saved": revenue_saved,
+            }
+        )
 
     # 5. Rule 5: Manual payment methods -> Offer Autopay Billing Discount
     if is_auto == 0:
         revenue_saved = float(churn_prob * predicted_ltv * 0.20)
-        recs.append({
-            "recommendation": "Offer Autopay Billing Discount",
-            "priority": "Medium",
-            "confidence": 0.75,
-            "reason": [
-                "Manual billing payment method is active",
-                "Autopay subscribers exhibit a 66% lower attrition rate than manual check payers"
-            ],
-            "estimated_revenue_saved": revenue_saved
-        })
+        recs.append(
+            {
+                "recommendation": "Offer Autopay Billing Discount",
+                "priority": "Medium",
+                "confidence": 0.75,
+                "reason": [
+                    "Manual billing payment method is active",
+                    "Autopay subscribers exhibit a 66% lower attrition rate than manual check payers",
+                ],
+                "estimated_revenue_saved": revenue_saved,
+            }
+        )
 
     # Default if no rules triggered
     if not recs:
-        recs.append({
-            "recommendation": "Standard Telecom Subscriber Loyalty Check-in",
-            "priority": "Low",
-            "confidence": 0.50,
-            "reason": ["Subscriber account is highly stable and active"],
-            "estimated_revenue_saved": 0.0
-        })
+        recs.append(
+            {
+                "recommendation": "Standard Telecom Subscriber Loyalty Check-in",
+                "priority": "Low",
+                "confidence": 0.50,
+                "reason": ["Subscriber account is highly stable and active"],
+                "estimated_revenue_saved": 0.0,
+            }
+        )
 
     # Sort recommendations by priority (Critical, High, Medium, Low)
     priority_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}

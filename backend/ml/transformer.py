@@ -6,7 +6,9 @@ Maps pandas DataFrame records into SQLAlchemy ORM object graphs
 """
 
 from typing import List, Tuple
+
 import pandas as pd
+
 from backend.core.logger import logger
 from backend.models.billing import Billing
 from backend.models.contract import Contract
@@ -35,7 +37,9 @@ class DataTransformer:
         Returns:
             List[Customer]: Mapped ORM objects list.
         """
-        logger.info(f"Transformation stage: Mapping {len(df)} records to ORM entity graphs.")
+        logger.info(
+            f"Transformation stage: Mapping {len(df)} records to ORM entity graphs."
+        )
         orm_customers = []
 
         for _, row in df.iterrows():

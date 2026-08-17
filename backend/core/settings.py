@@ -7,6 +7,7 @@ configuration from environment variables using Pydantic Settings.
 
 import os
 from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -63,13 +64,21 @@ class Settings(BaseSettings):
 
     # Monitoring & MLOps
     METRICS_ENABLED: bool = True
+    SCHEDULER_ENABLED: bool = True
     REGISTRY_PATH: str = "artifacts/registry/model_registry.json"
     DRIFT_HISTORY_DIR: str = "reports/drift"
     DRIFT_WARNING_THRESHOLD: float = 0.10  # PSI warning boundary
     DRIFT_CRITICAL_THRESHOLD: float = 0.25  # PSI critical boundary
-    SCHEDULER_ENABLED: bool = True
+    # Ollama & AI Provider Settings (Centralized Configuration)
+    OLLAMA_BASE_URL: str = Field(default="http://localhost:11434")
+    OLLAMA_MODEL: str = Field(default="llama3")
+    OLLAMA_TIMEOUT: float = Field(default=15.0)
+    OLLAMA_TEMPERATURE: float = Field(default=0.2)
+    OLLAMA_MAX_TOKENS: int = Field(default=500)
+    OLLAMA_RETRY_COUNT: int = Field(default=2)
 
     # Allow loading from environment variables/files
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -87,7 +96,11 @@ class Settings(BaseSettings):
             str: Connection URI string.
         """
         # If in testing mode or if SQLite fallback is explicitly requested, we can use SQLite
-        if self.ENV == "testing" and self.DB_HOST == "localhost" and os.environ.get("USE_SQLITE_TEST", "false").lower() == "true":
+        if (
+            self.ENV == "testing"
+            and self.DB_HOST == "localhost"
+            and os.environ.get("USE_SQLITE_TEST", "false").lower() == "true"
+        ):
             return "sqlite:///./test.db"
 
         # Standard PostgreSQL connection string

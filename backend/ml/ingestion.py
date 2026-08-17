@@ -5,9 +5,11 @@ Provides classes and methods to import raw telemetry files, process streaming so
 and prepare base structured DataFrames for EDA and ML training pipelines.
 """
 
-from typing import Union
 from pathlib import Path
+from typing import Union
+
 import pandas as pd
+
 from backend.core.logger import logger
 
 

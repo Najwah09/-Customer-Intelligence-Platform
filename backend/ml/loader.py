@@ -7,7 +7,9 @@ Enforces idempotency, counts metrics, and records logs in ImportHistory.
 
 from datetime import datetime
 from typing import Any, Dict, List, Set
+
 from sqlalchemy.orm import Session
+
 from backend.core.logger import logger
 from backend.models.customer import Customer
 from backend.models.import_history import ImportHistory
@@ -63,7 +65,9 @@ class DataLoader:
         Returns:
             Dict[str, Any]: Load metrics.
         """
-        logger.info(f"Load stage: Initiating database load for {len(customers)} records.")
+        logger.info(
+            f"Load stage: Initiating database load for {len(customers)} records."
+        )
         started_at = datetime.utcnow()
 
         rows_processed = len(customers)
@@ -74,7 +78,9 @@ class DataLoader:
         # Collect customer IDs to run batch deduplication check
         customer_ids = [c.customer_id for c in customers]
         existing_ids = self._get_existing_customer_ids(customer_ids)
-        logger.info(f"Load stage: Detected {len(existing_ids)} pre-existing customer records in database.")
+        logger.info(
+            f"Load stage: Detected {len(existing_ids)} pre-existing customer records in database."
+        )
 
         # Filter out duplicates
         pending_customers = []
@@ -86,7 +92,9 @@ class DataLoader:
 
         # Batch write pending records
         total_pending = len(pending_customers)
-        logger.info(f"Load stage: Loading {total_pending} new customer records in batches of {self.batch_size}.")
+        logger.info(
+            f"Load stage: Loading {total_pending} new customer records in batches of {self.batch_size}."
+        )
 
         try:
             for i in range(0, total_pending, self.batch_size):
@@ -97,7 +105,9 @@ class DataLoader:
                     rows_inserted += len(batch)
                 except Exception as batch_err:
                     self.db.rollback()
-                    logger.error(f"Failed to load batch indices {i} to {i + len(batch)}: {batch_err}")
+                    logger.error(
+                        f"Failed to load batch indices {i} to {i + len(batch)}: {batch_err}"
+                    )
                     rows_failed += len(batch)
 
             status = "success" if rows_failed == 0 else "degraded"
@@ -109,7 +119,9 @@ class DataLoader:
 
         completed_at = datetime.utcnow()
         duration = (completed_at - started_at).total_seconds()
-        logger.info(f"Load stage: DB loading finished in {duration:.2f}s. status='{status}'")
+        logger.info(
+            f"Load stage: DB loading finished in {duration:.2f}s. status='{status}'"
+        )
 
         # Save history log entry to database
         history_entry = ImportHistory(
@@ -125,7 +137,9 @@ class DataLoader:
         try:
             self.db.add(history_entry)
             self.db.commit()
-            logger.info("Load stage: Ingestion metrics recorded in import_history table.")
+            logger.info(
+                "Load stage: Ingestion metrics recorded in import_history table."
+            )
         except Exception as history_err:
             self.db.rollback()
             logger.error(f"Failed to record import history log: {history_err}")

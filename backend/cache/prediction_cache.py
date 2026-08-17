@@ -6,11 +6,11 @@ Tracks hits, misses, and hit ratio metrics. Fallback to thread-safe in-memory
 dict if Redis is unavailable.
 """
 
-import json
 import hashlib
+import json
 import os
-import time
 import threading
+import time
 from collections import OrderedDict
 from typing import Any, Dict, Optional, Tuple
 
@@ -20,6 +20,7 @@ from backend.core.settings import settings
 # Attempt redis import
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -74,16 +75,22 @@ class PredictionCache:
         self.misses = 0
         self.default_ttl = 3600
         self.redis_client: Optional[Any] = None
-        self._memory_cache = InMemoryLRUCache(maxsize=2000, default_ttl=self.default_ttl)
+        self._memory_cache = InMemoryLRUCache(
+            maxsize=2000, default_ttl=self.default_ttl
+        )
         self._lock = threading.Lock()
         self._init_redis()
 
     def _init_redis(self) -> None:
         if not REDIS_AVAILABLE:
-            logger.info("PredictionCache: redis module not installed. Using in-memory LRU fallback.")
+            logger.info(
+                "PredictionCache: redis module not installed. Using in-memory LRU fallback."
+            )
             return
 
-        redis_host = getattr(settings, "REDIS_HOST", os.getenv("REDIS_HOST", "localhost"))
+        redis_host = getattr(
+            settings, "REDIS_HOST", os.getenv("REDIS_HOST", "localhost")
+        )
         redis_port = getattr(settings, "REDIS_PORT", int(os.getenv("REDIS_PORT", 6379)))
 
         try:
@@ -97,17 +104,25 @@ class PredictionCache:
             )
             client.ping()
             self.redis_client = client
-            logger.info(f"PredictionCache: Connected to Redis at {redis_host}:{redis_port}")
+            logger.info(
+                f"PredictionCache: Connected to Redis at {redis_host}:{redis_port}"
+            )
         except Exception as e:
-            logger.warning(f"PredictionCache: Redis unavailable ({e}). Using in-memory LRU fallback.")
+            logger.warning(
+                f"PredictionCache: Redis unavailable ({e}). Using in-memory LRU fallback."
+            )
             self.redis_client = None
 
-    def _hash_payload(self, payload: Dict[str, Any], model_version: str = "v1.0.0") -> str:
+    def _hash_payload(
+        self, payload: Dict[str, Any], model_version: str = "v1.0.0"
+    ) -> str:
         """Create a deterministic SHA256 key from prediction features + model version."""
         raw = json.dumps({"payload": payload, "version": model_version}, sort_keys=True)
         return "pred_cache:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
-    def get_prediction(self, payload: Dict[str, Any], model_version: str = "v1.0.0") -> Optional[Dict[str, Any]]:
+    def get_prediction(
+        self, payload: Dict[str, Any], model_version: str = "v1.0.0"
+    ) -> Optional[Dict[str, Any]]:
         """Retrieve prediction result from cache."""
         key = self._hash_payload(payload, model_version)
         cached_str: Optional[str] = None
@@ -154,7 +169,11 @@ class PredictionCache:
             total = self.hits + self.misses
             ratio = (self.hits / total) if total > 0 else 0.0
             backend = "redis" if self.redis_client is not None else "in_memory_lru"
-            cached_items = self._memory_cache.size() if self.redis_client is None else "managed_by_redis"
+            cached_items = (
+                self._memory_cache.size()
+                if self.redis_client is None
+                else "managed_by_redis"
+            )
 
             return {
                 "backend": backend,

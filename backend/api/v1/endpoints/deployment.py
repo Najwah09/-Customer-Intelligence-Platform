@@ -3,6 +3,7 @@ Phase 8 Production Deployment, Scalable Inference & MLOps Endpoints.
 """
 
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
@@ -22,6 +23,7 @@ router = APIRouter(tags=["deployment_and_scale"])
 # ---------------------------------------------------------------------------
 # Deployment & Canary / BlueGreen APIs
 # ---------------------------------------------------------------------------
+
 
 @router.get("/deployment/status", summary="Deployment Status")
 def get_deployment_status() -> JSONResponse:
@@ -72,6 +74,7 @@ def switch_bluegreen() -> JSONResponse:
 # Prediction Cache APIs
 # ---------------------------------------------------------------------------
 
+
 @router.get("/cache/stats", summary="Prediction Cache Metrics")
 def get_cache_stats() -> JSONResponse:
     """Return hit count, miss count, hit ratio, and Redis status."""
@@ -83,6 +86,7 @@ def get_cache_stats() -> JSONResponse:
 # Batch & Async Prediction Queue APIs
 # ---------------------------------------------------------------------------
 
+
 @router.post("/predictions/batch", summary="Async Batch Prediction")
 def run_batch_predictions(
     customers: List[Dict[str, Any]] = Body(...),
@@ -90,7 +94,9 @@ def run_batch_predictions(
 ) -> JSONResponse:
     """Enqueue bulk batch prediction job."""
     if not customers:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty customer list")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Empty customer list"
+        )
 
     job_id = queue_manager.enqueue_batch(customers)
     return JSONResponse(
@@ -118,17 +124,21 @@ def get_prediction_history(
 # Explainability API
 # ---------------------------------------------------------------------------
 
+
 @router.get("/explain/{customer_id}", summary="SHAP Customer Explanation")
 def get_customer_explanation(customer_id: str) -> JSONResponse:
     """Return SHAP local explanation, waterfall data, and key feature drivers."""
     explanation = explainability_service.explain_customer(customer_id=customer_id)
     global_importance = explainability_service.get_global_importance()
-    return JSONResponse(content={"explanation": explanation, "global_importance": global_importance})
+    return JSONResponse(
+        content={"explanation": explanation, "global_importance": global_importance}
+    )
 
 
 # ---------------------------------------------------------------------------
 # Continuous Retraining APIs
 # ---------------------------------------------------------------------------
+
 
 @router.post("/retraining/run", summary="Trigger Continuous Retraining")
 def trigger_retraining(
@@ -154,6 +164,7 @@ def get_retraining_history(limit: int = Query(20, ge=1, le=100)) -> JSONResponse
 # ---------------------------------------------------------------------------
 # Alerts API
 # ---------------------------------------------------------------------------
+
 
 @router.get("/alerts", summary="Alert History & Dispatcher")
 def get_alerts(limit: int = Query(50, ge=1, le=200)) -> JSONResponse:

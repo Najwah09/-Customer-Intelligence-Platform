@@ -41,7 +41,9 @@ class MetricsCollector:
 
         # Latency tracking (rolling window of last 1000 measurements)
         self._latencies_ms: deque = deque(maxlen=1000)
-        self._latencies_per_endpoint: Dict[str, deque] = defaultdict(lambda: deque(maxlen=200))
+        self._latencies_per_endpoint: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=200)
+        )
 
         # Prediction tracking
         self._prediction_count: int = 0
@@ -118,15 +120,18 @@ class MetricsCollector:
 
             avg_churn = (
                 round(self._churn_prob_sum / self._prediction_count, 4)
-                if self._prediction_count > 0 else 0.0
+                if self._prediction_count > 0
+                else 0.0
             )
             avg_ltv = (
                 round(self._ltv_sum / self._prediction_count, 2)
-                if self._prediction_count > 0 else 0.0
+                if self._prediction_count > 0
+                else 0.0
             )
             error_rate = (
                 round(self._total_errors / self._total_requests, 4)
-                if self._total_requests > 0 else 0.0
+                if self._total_requests > 0
+                else 0.0
             )
 
             return {

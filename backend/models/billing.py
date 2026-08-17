@@ -5,6 +5,7 @@ Defines the Billing model.
 """
 
 from sqlalchemy import Column, Float, Integer
+
 from backend.database.models import Base
 
 

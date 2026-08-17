@@ -6,7 +6,9 @@ indicating which characteristics drive individual customer churn predictions.
 """
 
 from typing import Any, Dict
+
 import pandas as pd
+
 from backend.core.logger import logger
 
 
@@ -49,8 +51,7 @@ class ModelExplainer:
 
         # Filter to include only features present in input
         attributions = {
-            col: mock_shap_values.get(col, 0.01)
-            for col in features.columns
+            col: mock_shap_values.get(col, 0.01) for col in features.columns
         }
 
         logger.info(f"Generated attributions for {len(attributions)} features.")

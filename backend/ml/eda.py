@@ -5,8 +5,10 @@ Generates analytical summaries, performs statistical tests, and calculates
 missingness rates and feature distributions across raw customer datasets.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import pandas as pd
+
 from backend.core.logger import logger
 
 
@@ -37,7 +39,9 @@ class ExploratoryAnalysis:
         return summary
 
     @staticmethod
-    def analyze_target_distribution(df: pd.DataFrame, target_col: str) -> Dict[str, Any]:
+    def analyze_target_distribution(
+        df: pd.DataFrame, target_col: str
+    ) -> Dict[str, Any]:
         """
         Compute percentage distribution of the prediction target variable.
 

@@ -9,10 +9,11 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, Tuple
+
 import pandas as pd
 import pandera as pa
-from backend.core.logger import logger
 
+from backend.core.logger import logger
 
 # 1. Raw Dataset Validation Schema
 raw_schema = pa.DataFrameSchema(
@@ -24,21 +25,52 @@ raw_schema = pa.DataFrameSchema(
         "Dependents": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
         "tenure": pa.Column(int, pa.Check.ge(0), required=True),
         "PhoneService": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
-        "MultipleLines": pa.Column(str, pa.Check.isin(["Yes", "No", "No phone service"]), required=True),
-        "InternetService": pa.Column(str, pa.Check.isin(["DSL", "Fiber optic", "No"]), required=True),
-        "OnlineSecurity": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "OnlineBackup": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "DeviceProtection": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "TechSupport": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "StreamingTV": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "StreamingMovies": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "Contract": pa.Column(str, pa.Check.isin(["Month-to-month", "One year", "Two year"]), required=True),
+        "MultipleLines": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No phone service"]), required=True
+        ),
+        "InternetService": pa.Column(
+            str, pa.Check.isin(["DSL", "Fiber optic", "No"]), required=True
+        ),
+        "OnlineSecurity": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "OnlineBackup": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "DeviceProtection": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "TechSupport": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "StreamingTV": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "StreamingMovies": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "Contract": pa.Column(
+            str,
+            pa.Check.isin(["Month-to-month", "One year", "Two year"]),
+            required=True,
+        ),
         "PaperlessBilling": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
-        "PaymentMethod": pa.Column(str, pa.Check.isin([
-            "Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"
-        ]), required=True),
+        "PaymentMethod": pa.Column(
+            str,
+            pa.Check.isin(
+                [
+                    "Electronic check",
+                    "Mailed check",
+                    "Bank transfer (automatic)",
+                    "Credit card (automatic)",
+                ]
+            ),
+            required=True,
+        ),
         "MonthlyCharges": pa.Column(float, pa.Check.ge(0.0), required=True),
-        "TotalCharges": pa.Column(object, required=True),  # Can contain spaces, validated after typecasting in clean_schema
+        "TotalCharges": pa.Column(
+            object, required=True
+        ),  # Can contain spaces, validated after typecasting in clean_schema
         "Churn": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
     },
     coerce=True,
@@ -55,19 +87,50 @@ clean_schema = pa.DataFrameSchema(
         "dependents": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
         "tenure_months": pa.Column(int, pa.Check.ge(0), required=True),
         "phone_service": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
-        "multiple_lines": pa.Column(str, pa.Check.isin(["Yes", "No", "No phone service"]), required=True),
-        "internet_service": pa.Column(str, pa.Check.isin(["DSL", "Fiber optic", "No"]), required=True),
-        "online_security": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "online_backup": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "device_protection": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "tech_support": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "streaming_tv": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "streaming_movies": pa.Column(str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True),
-        "contract_type": pa.Column(str, pa.Check.isin(["Month-to-month", "One year", "Two year"]), required=True),
-        "paperless_billing": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
-        "payment_method": pa.Column(str, pa.Check.isin([
-            "Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"
-        ]), required=True),
+        "multiple_lines": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No phone service"]), required=True
+        ),
+        "internet_service": pa.Column(
+            str, pa.Check.isin(["DSL", "Fiber optic", "No"]), required=True
+        ),
+        "online_security": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "online_backup": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "device_protection": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "tech_support": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "streaming_tv": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "streaming_movies": pa.Column(
+            str, pa.Check.isin(["Yes", "No", "No internet service"]), required=True
+        ),
+        "contract_type": pa.Column(
+            str,
+            pa.Check.isin(["Month-to-month", "One year", "Two year"]),
+            required=True,
+        ),
+        "paperless_billing": pa.Column(
+            str, pa.Check.isin(["Yes", "No"]), required=True
+        ),
+        "payment_method": pa.Column(
+            str,
+            pa.Check.isin(
+                [
+                    "Electronic check",
+                    "Mailed check",
+                    "Bank transfer (automatic)",
+                    "Credit card (automatic)",
+                ]
+            ),
+            required=True,
+        ),
         "monthly_charges": pa.Column(float, pa.Check.ge(0.0), required=True),
         "total_charges": pa.Column(float, pa.Check.ge(0.0), required=True),
         "churn": pa.Column(int, pa.Check.isin([0, 1]), required=True),
@@ -106,12 +169,14 @@ class DataValidator:
         # Check if failure cases exist
         if err.failure_cases is not None:
             for _, row in err.failure_cases.iterrows():
-                failures.append({
-                    "column": str(row.get("column", "N/A")),
-                    "check": str(row.get("check", "N/A")),
-                    "failure_value": str(row.get("failure_case", "N/A")),
-                    "index": str(row.get("index", "N/A")),
-                })
+                failures.append(
+                    {
+                        "column": str(row.get("column", "N/A")),
+                        "check": str(row.get("check", "N/A")),
+                        "failure_value": str(row.get("failure_case", "N/A")),
+                        "index": str(row.get("index", "N/A")),
+                    }
+                )
 
         return {
             "status": "failed",

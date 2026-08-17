@@ -1,135 +1,173 @@
 """
-Subscriber Profile Explorer Page - Streamlit Dashboard.
-
-Allows dynamic searching and live FastAPI scoring for individual telecom subscriber accounts.
+Customer 360 — individual customer profile and intelligence.
 """
 
-from pathlib import Path
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from dashboard.components.cards import render_kpi_card, render_executive_header, render_ai_copilot_widget
+from dashboard.components.layout import (
+    inject_styles,
+    render_page_header,
+    render_section_header,
+    render_risk_badge,
+    format_currency,
+)
+from dashboard.components.cards import render_kpi_card, render_ai_recommendation, render_metric_panel
+from dashboard.components.layout import risk_level_label
 from dashboard.utils.api_client import APIClient
 from dashboard.utils.cache import load_global_intelligence_data
 
+inject_styles()
 client = APIClient()
 
 
 def render_customer_explorer():
-    """
-    Renders subscriber lookups and live REST response profiles.
-    """
-    render_executive_header(
-        title="🕵️ Subscriber Profile Explorer",
-        subtitle="Search individual telecom subscriber records to score live risk, calculate lifetime values, and inspect SHAP explainability.",
-        badge_text="Subscriber 360 AI Search"
+    render_page_header(
+        title="Customer 360",
+        subtitle="Search individual customers to review churn risk, lifetime value, health score, and retention recommendations.",
+        eyebrow="Customer Intelligence",
     )
 
     df_intel = load_global_intelligence_data()
+    if df_intel.empty:
+        st.warning("Customer intelligence data is not available.")
+        return
+
     customer_ids = sorted(list(df_intel["customer_id"].dropna().unique()))
 
     search_col1, search_col2 = st.columns([7, 3])
     with search_col1:
-        selected_cid = st.selectbox("Select Subscriber Account ID", [""] + customer_ids)
+        selected_cid = st.selectbox("Customer ID", [""] + customer_ids, label_visibility="visible")
     with search_col2:
-        manual_cid = st.text_input("Or Enter Manual Account ID")
+        manual_cid = st.text_input("Or enter ID manually", placeholder="e.g. 7590-VHVEG")
 
     target_cid = manual_cid.strip() if manual_cid.strip() else selected_cid
 
     if not target_cid:
-        st.info("Select or enter a Subscriber Account ID above to retrieve live account metrics.")
+        st.info("Select or enter a customer ID to view their profile.")
         return
 
-    with st.spinner(f"Querying live FastAPI service for subscriber account {target_cid}..."):
+    with st.spinner(f"Loading profile for {target_cid}…"):
         res = client.get_customer_intelligence(target_cid)
 
     if "error" in res:
-        st.error(res["error"])
-        return
+        match_df = df_intel[df_intel["customer_id"] == target_cid]
+        if not match_df.empty:
+            row = match_df.iloc[0].to_dict()
+            res = {
+                "customer_id": target_cid,
+                "churn_probability": float(row.get("churn_probability", 0.35)),
+                "predicted_ltv": float(row.get("predicted_ltv", row.get("total_charges", 840.0))),
+                "projected_future_ltv": float(row.get("projected_future_ltv", 500.0)),
+                "expected_remaining_lifetime_months": float(row.get("expected_remaining_lifetime_months", 18.0)),
+                "customer_segment": str(row.get("customer_segment", "Growth Subscribers")),
+                "rfm_persona": str(row.get("rfm_persona", "High-Potential Subscribers")),
+                "intelligence_score": float(row.get("intelligence_score", 75.0)),
+                "intelligence_category": str(row.get("intelligence_category", "Strong")),
+                "recommendations": [],
+            }
+        else:
+            st.error(f"Customer '{target_cid}' was not found.")
+            return
 
-    st.success(f"Successfully retrieved profile metrics for subscriber account: {target_cid}")
+    risk_label, _ = risk_level_label(res["churn_probability"])
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
+    st.markdown(f"### {target_cid}")
+    render_risk_badge(res["churn_probability"])
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
         render_kpi_card(
-            f"{res['churn_probability']*100:.1f}%", "Churn Attrition Risk",
-            border_color="#EF4444", trend="High Exposure", trend_type="negative" if res['churn_probability'] >= 0.5 else "positive"
+            f"{res['churn_probability'] * 100:.1f}%",
+            "Churn Probability",
+            accent="danger" if res["churn_probability"] >= 0.61 else "warning",
+            subtext=f"{risk_label} risk tier",
         )
-    with col2:
+    with c2:
         render_kpi_card(
-            f"${res['predicted_ltv']:,.2f}", "Subscriber LTV Spend",
-            border_color="#3B82F6", trend="Proxy LTV", trend_type="positive"
+            format_currency(res["predicted_ltv"]),
+            "Predicted LTV",
+            accent="primary",
         )
-    with col3:
+    with c3:
         render_kpi_card(
-            f"{res['customer_segment']}", "Subscriber Segment",
-            border_color="#F59E0B", trend="Active Cluster", trend_type="neutral"
+            f"{res['intelligence_score']:.0f}",
+            "Health Score",
+            accent="success",
+            subtext=res["intelligence_category"],
         )
-    with col4:
+    with c4:
         render_kpi_card(
-            f"{res['intelligence_score']:.1f} ({res['intelligence_category']})", "Subscriber Score",
-            border_color="#10B981", trend="Health Index", trend_type="positive"
+            res["customer_segment"],
+            "Segment",
+            accent="info",
+            subtext=res.get("rfm_persona", "—"),
         )
 
-    # Render AI Copilot Insight for target subscriber
-    render_ai_copilot_widget(
-        query=f"Analyze retention intervention options for subscriber {target_cid}...",
-        response=f"Subscriber {target_cid} belongs to '{res['customer_segment']}' with {res['churn_probability']*100:.1f}% attrition probability. Primary trigger: contract friction. Recommended action: Proactive 12-month fiber discount.",
-        confidence=int(res.get('intelligence_score', 92))
+    rec_text = (
+        f"Customer belongs to '{res['customer_segment']}' with "
+        f"{res['churn_probability'] * 100:.1f}% churn probability. "
+        f"Review contract terms and consider a targeted retention offer based on segment profile."
     )
+    recs = res.get("recommendations", [])
+    if recs:
+        top_rec = recs[0]
+        rec_text = (
+            f"Recommended action: {top_rec.get('recommendation', 'Retention outreach')} "
+            f"(Priority: {top_rec.get('priority', 'Medium')}). "
+            f"Estimated value impact: {format_currency(float(top_rec.get('estimated_revenue_saved', 0)))}."
+        )
+    render_ai_recommendation(rec_text)
 
     details_col, recs_col = st.columns(2)
 
     with details_col:
-        st.subheader("📋 Telecom Account Profile & Metadata")
-        
-        match_df = df_intel[df_intel["customer_id"] == target_cid]
-        if not match_df.empty:
-            st.markdown(
-                f"""
-                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; line-height: 1.8;">
-                    <div>• <b>Telecom RFM Persona</b>: <span style="color: #A5B4FC;">{res.get('rfm_persona', 'N/A')}</span></div>
-                    <div>• <b>Projected Contract Revenue</b>: <span style="color: #34D399;">${res.get('projected_future_ltv', 0.0):,.2f}</span></div>
-                    <div>• <b>Expected Remaining Lifetime</b>: <span style="color: #F8FAFC;">{res.get('expected_remaining_lifetime_months', 0.0):.1f} months</span></div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        st.divider()
+        render_section_header("Customer Overview")
+        render_metric_panel("Account Details", [
+            ("RFM Persona", res.get("rfm_persona", "N/A")),
+            ("Projected Future LTV", format_currency(float(res.get("projected_future_ltv", 0)))),
+            ("Expected Remaining Lifetime", f"{res.get('expected_remaining_lifetime_months', 0):.1f} months"),
+            ("Health Category", res.get("intelligence_category", "N/A")),
+        ])
 
-        st.subheader("📈 Subscriber Score Drift (Trailing 3 Months)")
+        render_section_header("Health Score Trend")
         timeline_data = pd.DataFrame({
-            "Period": ["Month -2", "Month -1", "Current Month"],
-            "Subscriber Score": [res["intelligence_score"] - 4, res["intelligence_score"] - 1, res["intelligence_score"]]
+            "Period": ["Month −2", "Month −1", "Current"],
+            "Score": [
+                res["intelligence_score"] - 4,
+                res["intelligence_score"] - 1,
+                res["intelligence_score"],
+            ],
         })
         fig_time = px.line(
-            timeline_data, x="Period", y="Subscriber Score",
-            markers=True, template="plotly_dark",
-            title="Composite Subscriber Health Drift"
+            timeline_data,
+            x="Period",
+            y="Score",
+            markers=True,
+            title="Health Score — Trailing 3 Months",
         )
-        fig_time.update_traces(line_color="#8B5CF6", marker_size=8)
-        fig_time.update_layout(margin=dict(l=40, r=30, t=50, b=40))
+        fig_time.update_traces(line_color="#4F46E5", marker_size=7)
+        fig_time.update_layout(
+            template="plotly_white",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=280,
+            margin=dict(l=40, r=20, t=48, b=40),
+        )
         st.plotly_chart(fig_time, use_container_width=True)
 
     with recs_col:
-        st.subheader("🎯 Telecom Retention Action Plan")
-        recs_list = res.get("recommendations", [])
-        
-        for idx, rec in enumerate(recs_list):
-            st.markdown(
-                f"""
-                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                    <div style="font-size: 1.05rem; font-weight: 700; color: #F8FAFC;">Offer {idx+1}: {rec['recommendation']}</div>
-                    <div style="margin-top: 6px; font-size: 0.82rem; color: #94A3B8;">
-                        <span style="background: rgba(99, 102, 241, 0.2); color: #A5B4FC; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Priority: {rec['priority']}</span>
-                        <span style="margin-left: 8px; color: #34D399; font-weight: 600;">Est. Savings: ${rec['estimated_revenue_saved']:.2f}</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        render_section_header("Retention Actions")
+        if recs:
+            for idx, rec in enumerate(recs):
+                with st.container(border=True):
+                    st.markdown(f"**Action {idx + 1}**: {rec.get('recommendation', 'Retention offer')}")
+                    st.caption(f"Priority: {rec.get('priority', 'Medium')} · Est. value: {format_currency(float(rec.get('estimated_revenue_saved', 0)))}")
+        else:
+            from dashboard.components.layout import render_empty_state
+            render_empty_state("No specific actions assigned", "Retention recommendations will appear when available from the scoring pipeline.")
+
 
 
 if __name__ == "__main__":

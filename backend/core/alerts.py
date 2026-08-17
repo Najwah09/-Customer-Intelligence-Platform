@@ -37,8 +37,12 @@ class EnterpriseAlertManager:
     def __init__(self) -> None:
         self.log_path = ALERT_HISTORY_PATH
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        self.slack_url = os.getenv("SLACK_WEBHOOK_URL") or getattr(settings, "SLACK_WEBHOOK_URL", "")
-        self.teams_url = os.getenv("TEAMS_WEBHOOK_URL") or getattr(settings, "TEAMS_WEBHOOK_URL", "")
+        self.slack_url = os.getenv("SLACK_WEBHOOK_URL") or getattr(
+            settings, "SLACK_WEBHOOK_URL", ""
+        )
+        self.teams_url = os.getenv("TEAMS_WEBHOOK_URL") or getattr(
+            settings, "TEAMS_WEBHOOK_URL", ""
+        )
 
     def trigger_alert(
         self,
@@ -81,8 +85,14 @@ class EnterpriseAlertManager:
         # 2. Slack Webhook (if configured)
         if self.slack_url:
             try:
-                payload = json.dumps({"text": f"🚨 *{alert_type}* [{severity}]\n{message}"}).encode("utf-8")
-                req = urllib.request.Request(self.slack_url, data=payload, headers={"Content-Type": "application/json"})
+                payload = json.dumps(
+                    {"text": f"🚨 *{alert_type}* [{severity}]\n{message}"}
+                ).encode("utf-8")
+                req = urllib.request.Request(
+                    self.slack_url,
+                    data=payload,
+                    headers={"Content-Type": "application/json"},
+                )
                 urllib.request.urlopen(req, timeout=3.0)
                 record["dispatched_channels"].append("slack")
             except Exception as e:
@@ -91,8 +101,14 @@ class EnterpriseAlertManager:
         # 3. Teams Webhook (if configured)
         if self.teams_url:
             try:
-                payload = json.dumps({"text": f"🚨 **{alert_type}** [{severity}]\n{message}"}).encode("utf-8")
-                req = urllib.request.Request(self.teams_url, data=payload, headers={"Content-Type": "application/json"})
+                payload = json.dumps(
+                    {"text": f"🚨 **{alert_type}** [{severity}]\n{message}"}
+                ).encode("utf-8")
+                req = urllib.request.Request(
+                    self.teams_url,
+                    data=payload,
+                    headers={"Content-Type": "application/json"},
+                )
                 urllib.request.urlopen(req, timeout=3.0)
                 record["dispatched_channels"].append("teams")
             except Exception as e:

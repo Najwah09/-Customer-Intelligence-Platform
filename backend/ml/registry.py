@@ -39,6 +39,7 @@ VALID_STATUSES = {"development", "staging", "production", "archived"}
 # Low-level I/O helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_registry_dir() -> None:
     REGISTRY_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -67,6 +68,7 @@ def _write_registry(data: Dict[str, List[Dict[str, Any]]]) -> None:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def register_model(
     model_name: str,
@@ -134,7 +136,9 @@ def register_model(
         # Prevent duplicate versions
         existing_versions = [e["version"] for e in versions]
         if version in existing_versions:
-            logger.warning(f"Registry: version {version} of '{model_name}' already exists — skipping.")
+            logger.warning(
+                f"Registry: version {version} of '{model_name}' already exists — skipping."
+            )
             return next(e for e in versions if e["version"] == version)
 
         versions.append(entry)
@@ -160,14 +164,18 @@ def promote(model_name: str, version: str, new_status: str) -> Dict[str, Any]:
 
         target = next((e for e in versions if e["version"] == version), None)
         if target is None:
-            raise KeyError(f"Model '{model_name}' version '{version}' not found in registry.")
+            raise KeyError(
+                f"Model '{model_name}' version '{version}' not found in registry."
+            )
 
         if new_status == "production":
             # Demote all existing production entries to staging
             for entry in versions:
                 if entry["status"] == "production" and entry["version"] != version:
                     entry["status"] = "staging"
-                    logger.info(f"Registry: demoted {model_name}@{entry['version']} → staging")
+                    logger.info(
+                        f"Registry: demoted {model_name}@{entry['version']} → staging"
+                    )
 
         target["status"] = new_status
         _write_registry(registry)
@@ -192,18 +200,23 @@ def rollback(model_name: str) -> Optional[Dict[str, Any]]:
 
         current_prod = next((e for e in versions if e["status"] == "production"), None)
         if current_prod is None:
-            logger.warning(f"Registry: no production model found for '{model_name}' — nothing to roll back.")
+            logger.warning(
+                f"Registry: no production model found for '{model_name}' — nothing to roll back."
+            )
             return None
 
         # Find most recent staging version (excluding current prod)
         staging_candidates = [
-            e for e in versions
+            e
+            for e in versions
             if e["status"] == "staging" and e["version"] != current_prod["version"]
         ]
         staging_candidates.sort(key=lambda e: e["registered_at"], reverse=True)
 
         if not staging_candidates:
-            logger.warning(f"Registry: no staging version available for rollback of '{model_name}'.")
+            logger.warning(
+                f"Registry: no staging version available for rollback of '{model_name}'."
+            )
             return None
 
         prev = staging_candidates[0]
@@ -252,9 +265,7 @@ def add_tag(model_name: str, version: str, tag: str) -> Dict[str, Any]:
     return target
 
 
-def compare_versions(
-    model_name: str, version_a: str, version_b: str
-) -> Dict[str, Any]:
+def compare_versions(model_name: str, version_a: str, version_b: str) -> Dict[str, Any]:
     """
     Side-by-side metric comparison of two model versions.
 
@@ -282,10 +293,16 @@ def compare_versions(
         val_a = metrics_a.get(key)
         val_b = metrics_b.get(key)
         try:
-            delta = round(float(val_b) - float(val_a), 6) if val_a is not None and val_b is not None else None
+            delta = (
+                round(float(val_b) - float(val_a), 6)
+                if val_a is not None and val_b is not None
+                else None
+            )
         except (TypeError, ValueError):
             delta = None
-        diff_table.append({"metric": key, version_a: val_a, version_b: val_b, "delta": delta})
+        diff_table.append(
+            {"metric": key, version_a: val_a, version_b: val_b, "delta": delta}
+        )
 
     return {
         "model_name": model_name,

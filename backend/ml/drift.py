@@ -67,6 +67,7 @@ CATEGORICAL_FEATURES = [
 # PSI Computation
 # ---------------------------------------------------------------------------
 
+
 def _compute_psi(
     baseline_values: np.ndarray,
     production_values: np.ndarray,
@@ -97,13 +98,16 @@ def _compute_psi(
     pct_baseline = _bucket(baseline_values, breakpoints)
     pct_production = _bucket(production_values, breakpoints)
 
-    psi = float(np.sum((pct_production - pct_baseline) * np.log(pct_production / pct_baseline)))
+    psi = float(
+        np.sum((pct_production - pct_baseline) * np.log(pct_production / pct_baseline))
+    )
     return round(abs(psi), 6)
 
 
 # ---------------------------------------------------------------------------
 # Chi-squared proportional shift
 # ---------------------------------------------------------------------------
+
 
 def _compute_categorical_drift(
     baseline_dist: Dict[str, float],
@@ -140,6 +144,7 @@ def _compute_categorical_drift(
 # Severity Classification
 # ---------------------------------------------------------------------------
 
+
 def _classify_psi(psi: float) -> str:
     """Map a PSI value to a severity label."""
     if psi < WARNING_THRESHOLD:
@@ -161,6 +166,7 @@ def _classify_shift(max_shift: float) -> str:
 # ---------------------------------------------------------------------------
 # Main drift check runner
 # ---------------------------------------------------------------------------
+
 
 def run_drift_check(df: pd.DataFrame) -> Dict[str, Any]:
     """
@@ -191,12 +197,16 @@ def run_drift_check(df: pd.DataFrame) -> Dict[str, Any]:
     # --- Numerical drift (PSI) ---
     for feature in NUMERICAL_FEATURES:
         if feature not in df.columns:
-            logger.warning(f"Drift: feature '{feature}' missing from production data — skipping.")
+            logger.warning(
+                f"Drift: feature '{feature}' missing from production data — skipping."
+            )
             continue
 
         prod_values = df[feature].dropna().values
         if len(prod_values) < 30:
-            logger.warning(f"Drift: too few samples for '{feature}' ({len(prod_values)}) — skipping.")
+            logger.warning(
+                f"Drift: too few samples for '{feature}' ({len(prod_values)}) — skipping."
+            )
             continue
 
         # Reconstruct baseline distribution using mean ± 3σ sampling
@@ -213,15 +223,17 @@ def run_drift_check(df: pd.DataFrame) -> Dict[str, Any]:
         elif severity == "Warning":
             any_warning = True
 
-        numerical_results.append({
-            "feature": feature,
-            "psi": psi,
-            "severity": severity,
-            "baseline_mean": round(mean, 4),
-            "production_mean": round(float(np.mean(prod_values)), 4),
-            "baseline_std": round(std, 4),
-            "production_std": round(float(np.std(prod_values)), 4),
-        })
+        numerical_results.append(
+            {
+                "feature": feature,
+                "psi": psi,
+                "severity": severity,
+                "baseline_mean": round(mean, 4),
+                "production_mean": round(float(np.mean(prod_values)), 4),
+                "baseline_std": round(std, 4),
+                "production_std": round(float(np.std(prod_values)), 4),
+            }
+        )
 
     # --- Categorical drift ---
     categorical_results: List[Dict[str, Any]] = []
@@ -241,12 +253,14 @@ def run_drift_check(df: pd.DataFrame) -> Dict[str, Any]:
         elif severity == "Warning":
             any_warning = True
 
-        categorical_results.append({
-            "feature": feature,
-            "max_shift": max_shift,
-            "severity": severity,
-            "categories": shift_table,
-        })
+        categorical_results.append(
+            {
+                "feature": feature,
+                "max_shift": max_shift,
+                "severity": severity,
+                "categories": shift_table,
+            }
+        )
 
     # --- Overall severity ---
     if any_critical:
@@ -273,6 +287,7 @@ def run_drift_check(df: pd.DataFrame) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Persistence helpers
 # ---------------------------------------------------------------------------
+
 
 def _persist_drift_report(report: Dict[str, Any]) -> None:
     """Save drift report to history dir and update latest summary files."""
@@ -330,10 +345,18 @@ def _write_markdown_report(report: Dict[str, Any], path: Path) -> None:
             f"| {r['baseline_std']} | {r['production_std']} |"
         )
 
-    lines += ["", "---", "", "## Categorical Feature Drift (Max Proportional Shift)", ""]
+    lines += [
+        "",
+        "---",
+        "",
+        "## Categorical Feature Drift (Max Proportional Shift)",
+        "",
+    ]
     for r in report.get("categorical_drift", []):
         emoji = severity_emoji.get(r["severity"], "")
-        lines.append(f"### {r['feature']} — {emoji} {r['severity']} (max shift: {r['max_shift']:.4f})")
+        lines.append(
+            f"### {r['feature']} — {emoji} {r['severity']} (max shift: {r['max_shift']:.4f})"
+        )
         lines.append("")
         lines.append("| Category | Baseline % | Production % | Shift |")
         lines.append("|---|---|---|---|")

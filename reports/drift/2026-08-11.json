@@ -1,0 +1,9 @@
+{
+  "run_at": "2026-08-11T14:55:03.807272+00:00",
+  "dataset_rows": 3,
+  "overall_severity": "Normal",
+  "psi_warning_threshold": 0.1,
+  "psi_critical_threshold": 0.25,
+  "numerical_drift": [],
+  "categorical_drift": []
+}

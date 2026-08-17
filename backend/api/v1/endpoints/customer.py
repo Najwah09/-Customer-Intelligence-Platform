@@ -5,26 +5,28 @@ Exposes REST APIs to score customer records, fetch hybrid recommendations,
 retrieve LTV predictions, check segmentation profiles, and trigger batch analysis.
 """
 
-from typing import Any, Dict, List
 from pathlib import Path
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.core.logger import logger
 from backend.database.database import get_db
-from backend.models.customer import Customer
-from backend.models.contract import Contract
-from backend.models.service import Service
-from backend.models.billing import Billing
-from backend.services.predict_service import PredictService
 from backend.ml.intelligence import (
     calculate_intelligence_score,
-    generate_recommendation_details,
     calculate_rfm,
+    generate_recommendation_details,
 )
+from backend.models.billing import Billing
+from backend.models.contract import Contract
+from backend.models.customer import Customer
+from backend.models.service import Service
+from backend.services.predict_service import PredictService
 
 router = APIRouter()
+
 
 # Schema declarations
 class LtvResponse(BaseModel):
@@ -33,19 +35,23 @@ class LtvResponse(BaseModel):
     expected_remaining_lifetime_months: float
     projected_future_ltv: float
 
+
 class SegmentResponse(BaseModel):
     customer_id: str
     segment: str
     profile: Dict[str, Any]
+
 
 class IntelligenceResponse(BaseModel):
     customer_id: str
     score: float
     category: str
 
+
 class RecommendationResponse(BaseModel):
     customer_id: str
     recommendations: List[Dict[str, Any]]
+
 
 class UnifiedIntelligenceResponse(BaseModel):
     customer_id: str
@@ -59,12 +65,14 @@ class UnifiedIntelligenceResponse(BaseModel):
     intelligence_category: str
     recommendations: List[Dict[str, Any]]
 
+
 class BatchIntelligenceRequest(BaseModel):
     customer_ids: List[str]
 
 
 _REPORT_DF_CACHE = None
 _DB_DISABLED = False
+
 
 def _get_report_df():
     global _REPORT_DF_CACHE
@@ -73,12 +81,14 @@ def _get_report_df():
         if csv_path.exists():
             try:
                 import pandas as pd
+
                 _REPORT_DF_CACHE = pd.read_csv(csv_path)
             except Exception:
                 _REPORT_DF_CACHE = pd.DataFrame()
         else:
             _REPORT_DF_CACHE = pd.DataFrame()
     return _REPORT_DF_CACHE
+
 
 def fetch_customer_sample(db: Session, customer_id: str) -> Dict[str, Any]:
     """
@@ -88,10 +98,14 @@ def fetch_customer_sample(db: Session, customer_id: str) -> Dict[str, Any]:
     customer = None
     if db is not None and not _DB_DISABLED:
         try:
-            customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+            customer = (
+                db.query(Customer).filter(Customer.customer_id == customer_id).first()
+            )
         except Exception as e:
             _DB_DISABLED = True
-            logger.warning(f"Database query failed ({e}). Disabling DB lookup for session, falling back to CSV lookup.")
+            logger.warning(
+                f"Database query failed ({e}). Disabling DB lookup for session, falling back to CSV lookup."
+            )
 
     if customer:
         con = customer.contract
@@ -133,39 +147,70 @@ def fetch_customer_sample(db: Session, customer_id: str) -> Dict[str, Any]:
                 pass
 
         if found_row:
+
+            def _to_int(val, d=0):
+                try:
+                    if pd.isna(val):
+                        return d
+                    return int(float(val))
+                except Exception:
+                    return d
+
+            def _to_float(val, d=0.0):
+                try:
+                    if pd.isna(val):
+                        return d
+                    return float(val)
+                except Exception:
+                    return d
+
             sample = {
                 "customer_id": str(found_row.get("customer_id", customer_id)),
                 "gender": str(found_row.get("gender", "Female")),
-                "senior_citizen": int(found_row.get("senior_citizen", 0)),
+                "senior_citizen": _to_int(found_row.get("senior_citizen"), 0),
                 "partner": str(found_row.get("partner", "No")),
                 "dependents": str(found_row.get("dependents", "No")),
-                "tenure_months": int(found_row.get("tenure_months", 12)),
+                "tenure_months": _to_int(found_row.get("tenure_months"), 12),
                 "contract_type": str(found_row.get("contract_type", "Month-to-month")),
                 "paperless_billing": str(found_row.get("paperless_billing", "Yes")),
-                "payment_method": str(found_row.get("payment_method", "Electronic check")),
+                "payment_method": str(
+                    found_row.get("payment_method", "Electronic check")
+                ),
                 "phone_service": str(found_row.get("phone_service", "Yes")),
                 "multiple_lines": str(found_row.get("multiple_lines", "No")),
-                "internet_service": str(found_row.get("internet_service", "Fiber optic")),
+                "internet_service": str(
+                    found_row.get("internet_service", "Fiber optic")
+                ),
                 "online_security": str(found_row.get("online_security", "No")),
                 "online_backup": str(found_row.get("online_backup", "No")),
                 "device_protection": str(found_row.get("device_protection", "No")),
                 "tech_support": str(found_row.get("tech_support", "No")),
                 "streaming_tv": str(found_row.get("streaming_tv", "No")),
                 "streaming_movies": str(found_row.get("streaming_movies", "No")),
-                "monthly_charges": float(found_row.get("monthly_charges", 70.0)),
-                "total_charges": float(found_row.get("total_charges", 840.0)),
+                "monthly_charges": _to_float(found_row.get("monthly_charges"), 70.0),
+                "total_charges": _to_float(found_row.get("total_charges"), 840.0),
             }
+
         else:
             # Fallback 2: Generate default sample using feature_store
             from backend.ml.feature_store import feature_store
+
             sample = feature_store.apply_defaults({"customer_id": customer_id})
 
     # Count YES services
     service_cols = [
-        "phone_service", "multiple_lines", "online_security", "online_backup",
-        "device_protection", "tech_support", "streaming_tv", "streaming_movies"
+        "phone_service",
+        "multiple_lines",
+        "online_security",
+        "online_backup",
+        "device_protection",
+        "tech_support",
+        "streaming_tv",
+        "streaming_movies",
     ]
-    sample["total_services"] = sum(1 for col in service_cols if str(sample.get(col, "No")).strip().lower() == "yes")
+    sample["total_services"] = sum(
+        1 for col in service_cols if str(sample.get(col, "No")).strip().lower() == "yes"
+    )
 
     return sample
 
@@ -180,56 +225,88 @@ def run_intelligence_calculations(sample: Dict[str, Any]) -> Dict[str, Any]:
     churn_prob = churn_res["probability"]
 
     # 2. LTV Predictions
-    # Load LTV model from models folder
-    import joblib
-    base_dir = Path(__file__).resolve().parents[4]
-    ltv_model_path = base_dir / "models" / "ltv_model.pkl"
-    
-    if not ltv_model_path.exists():
-        # Fallback path in artifacts registry
-        ltv_model_path = base_dir / "artifacts" / "models" / "ltv_model.pkl"
+    predicted_ltv = float(sample.get("total_charges", 840.0))
+    try:
+        import joblib
 
-    if ltv_model_path.exists():
-        ltv_pipeline = joblib.load(ltv_model_path)
-        # Create a single row DF
-        from backend.ml.training import engineer_features
-        import pandas as pd
-        df_row = pd.DataFrame([sample])
-        df_eng = engineer_features(df_row)
-        predicted_ltv = float(ltv_pipeline.predict(df_eng)[0])
-    else:
-        # Fallback historical proxy if models are not generated yet
-        predicted_ltv = float(sample["total_charges"])
+        base_dir = Path(__file__).resolve().parents[4]
+        ltv_model_path = base_dir / "models" / "ltv_model.pkl"
+        if not ltv_model_path.exists():
+            ltv_model_path = base_dir / "artifacts" / "models" / "ltv_model.pkl"
+
+        if ltv_model_path.exists():
+            ltv_pipeline = joblib.load(ltv_model_path)
+            import pandas as pd
+
+            from backend.ml.training import engineer_features
+
+            df_row = pd.DataFrame([sample])
+            df_eng = engineer_features(df_row)
+            if hasattr(ltv_pipeline, "predict"):
+                predicted_ltv = float(ltv_pipeline.predict(df_eng)[0])
+    except Exception as e:
+        logger.warning(f"LTV prediction fallback due to: {e}")
 
     # Forecast Projected Future LTV
-    expected_remaining_lifetime = max(0.0, (1.0 / max(0.01, churn_prob)) - sample["tenure_months"])
-    projected_future_ltv = expected_remaining_lifetime * sample["monthly_charges"]
+    expected_remaining_lifetime = max(
+        0.0, (1.0 / max(0.01, churn_prob)) - sample.get("tenure_months", 12)
+    )
+    projected_future_ltv = expected_remaining_lifetime * sample.get(
+        "monthly_charges", 70.0
+    )
 
     # 3. Customer Segment K-Means
-    seg_model_path = base_dir / "models" / "segmentation_model.pkl"
-    if not seg_model_path.exists():
-        seg_model_path = base_dir / "artifacts" / "models" / "segmentation_model.pkl"
-
     segment = "Growth Subscribers"  # Fallback default
-    if seg_model_path.exists():
-        seg_pipeline = joblib.load(seg_model_path)
-        numeric_cols = ["tenure_months", "monthly_charges", "total_services"]
-        
-        # Calculate charges ratio
-        sample_ratio = sample["monthly_charges"] / (sample["tenure_months"] + 1)
-        X_cluster = [[sample["tenure_months"], sample["monthly_charges"], sample["total_services"], sample_ratio]]
-        
-        # Scale and predict cluster raw ID
-        cluster_id = int(seg_pipeline.named_steps["kmeans"].predict(seg_pipeline.named_steps["scaler"].transform(X_cluster))[0])
-        # Map cluster ID to telecom business segment name
-        names = ["High-Value Subscribers", "Loyal Subscribers", "Growth Subscribers", "Budget Subscribers"]
-        segment = names[cluster_id % len(names)]
+    try:
+        import joblib
+
+        base_dir = Path(__file__).resolve().parents[4]
+        seg_model_path = base_dir / "models" / "segmentation_model.pkl"
+        if not seg_model_path.exists():
+            seg_model_path = (
+                base_dir / "artifacts" / "models" / "segmentation_model.pkl"
+            )
+
+        if seg_model_path.exists():
+            seg_pipeline = joblib.load(seg_model_path)
+            sample_ratio = sample.get("monthly_charges", 70.0) / (
+                sample.get("tenure_months", 12) + 1
+            )
+            X_cluster = [
+                [
+                    sample.get("tenure_months", 12),
+                    sample.get("monthly_charges", 70.0),
+                    sample.get("total_services", 2),
+                    sample_ratio,
+                ]
+            ]
+
+            if hasattr(seg_pipeline, "predict"):
+                cluster_id = int(seg_pipeline.predict(X_cluster)[0])
+            elif hasattr(seg_pipeline, "named_steps"):
+                cluster_id = int(
+                    seg_pipeline.named_steps["kmeans"].predict(
+                        seg_pipeline.named_steps["scaler"].transform(X_cluster)
+                    )[0]
+                )
+            else:
+                cluster_id = 0
+            names = [
+                "High-Value Subscribers",
+                "Loyal Subscribers",
+                "Growth Subscribers",
+                "Budget Subscribers",
+            ]
+            segment = names[cluster_id % len(names)]
+    except Exception as e:
+        logger.warning(f"Segmentation prediction fallback due to: {e}")
+        segment = "Growth Subscribers"
 
     # 4. Telecom RFM Persona
     r_score = int(min(5, max(1, round((1.0 - churn_prob) * 5))))
     f_score = min(5, max(1, sample["tenure_months"] // 15 + 1))
     m_score = min(5, max(1, int(sample["total_charges"] // 1500 + 1)))
-    
+
     def get_persona(r, f, m) -> str:
         if r >= 4 and f >= 4 and m >= 4:
             return "VIP Subscribers"
@@ -276,7 +353,9 @@ def run_intelligence_calculations(sample: Dict[str, Any]) -> Dict[str, Any]:
     status_code=status.HTTP_200_OK,
     summary="Get unified intelligence parameters for a single customer",
 )
-def get_customer_intelligence(customer_id: str, db: Session = Depends(get_db)) -> UnifiedIntelligenceResponse:
+def get_customer_intelligence(
+    customer_id: str, db: Session = Depends(get_db)
+) -> UnifiedIntelligenceResponse:
     """
     Score and fetch profile metrics, LTV prediction, K-Means segment, RFM persona,
     unified score, and retention recommendations in a single call.
@@ -292,13 +371,17 @@ def get_customer_intelligence(customer_id: str, db: Session = Depends(get_db)) -
     status_code=status.HTTP_200_OK,
     summary="Get recommendations for a customer",
 )
-def get_customer_recommendations(customer_id: str, db: Session = Depends(get_db)) -> RecommendationResponse:
+def get_customer_recommendations(
+    customer_id: str, db: Session = Depends(get_db)
+) -> RecommendationResponse:
     """
     Get rule-based retention actions and saved revenue details.
     """
     sample = fetch_customer_sample(db, customer_id)
     res = run_intelligence_calculations(sample)
-    return RecommendationResponse(customer_id=customer_id, recommendations=res["recommendations"])
+    return RecommendationResponse(
+        customer_id=customer_id, recommendations=res["recommendations"]
+    )
 
 
 @router.get(
@@ -317,7 +400,7 @@ def get_customer_ltv(customer_id: str, db: Session = Depends(get_db)) -> LtvResp
         customer_id=customer_id,
         historical_ltv_proxy=res["predicted_ltv"],
         expected_remaining_lifetime_months=res["expected_remaining_lifetime_months"],
-        projected_future_ltv=res["projected_future_ltv"]
+        projected_future_ltv=res["projected_future_ltv"],
     )
 
 
@@ -327,20 +410,24 @@ def get_customer_ltv(customer_id: str, db: Session = Depends(get_db)) -> LtvResp
     status_code=status.HTTP_200_OK,
     summary="Get K-Means cluster segment for a customer",
 )
-def get_customer_segment(customer_id: str, db: Session = Depends(get_db)) -> SegmentResponse:
+def get_customer_segment(
+    customer_id: str, db: Session = Depends(get_db)
+) -> SegmentResponse:
     """
     Get customer K-Means segment name and baseline metrics.
     """
     sample = fetch_customer_sample(db, customer_id)
     res = run_intelligence_calculations(sample)
-    
+
     # Format a profile summary
     profile = {
         "monthly_charges": sample["monthly_charges"],
         "tenure_months": sample["tenure_months"],
-        "total_services": sample["total_services"]
+        "total_services": sample["total_services"],
     }
-    return SegmentResponse(customer_id=customer_id, segment=res["customer_segment"], profile=profile)
+    return SegmentResponse(
+        customer_id=customer_id, segment=res["customer_segment"], profile=profile
+    )
 
 
 @router.get(
@@ -349,7 +436,9 @@ def get_customer_segment(customer_id: str, db: Session = Depends(get_db)) -> Seg
     status_code=status.HTTP_200_OK,
     summary="Get unified Customer Intelligence Score",
 )
-def get_customer_intelligence_score(customer_id: str, db: Session = Depends(get_db)) -> IntelligenceResponse:
+def get_customer_intelligence_score(
+    customer_id: str, db: Session = Depends(get_db)
+) -> IntelligenceResponse:
     """
     Get unified score (0-100) and risk category.
     """
@@ -358,7 +447,7 @@ def get_customer_intelligence_score(customer_id: str, db: Session = Depends(get_
     return IntelligenceResponse(
         customer_id=customer_id,
         score=res["intelligence_score"],
-        category=res["intelligence_category"]
+        category=res["intelligence_category"],
     )
 
 
@@ -368,7 +457,9 @@ def get_customer_intelligence_score(customer_id: str, db: Session = Depends(get_
     status_code=status.HTTP_200_OK,
     summary="Trigger batch scoring and intelligence reports",
 )
-def batch_score_customers(request: BatchIntelligenceRequest, db: Session = Depends(get_db)) -> List[UnifiedIntelligenceResponse]:
+def batch_score_customers(
+    request: BatchIntelligenceRequest, db: Session = Depends(get_db)
+) -> List[UnifiedIntelligenceResponse]:
     """
     Score a list of customer IDs and return batch customer intelligence records.
     """

@@ -42,9 +42,7 @@ def check_health(db: Session = Depends(get_db)) -> JSONResponse:
     """
     db_connected = test_db_connection()
 
-    missing_artifacts = [
-        f for f in REQUIRED_ARTIFACTS if not Path(f).exists()
-    ]
+    missing_artifacts = [f for f in REQUIRED_ARTIFACTS if not Path(f).exists()]
     artifacts_ok = len(missing_artifacts) == 0
 
     overall_healthy = db_connected and artifacts_ok
@@ -64,7 +62,9 @@ def check_health(db: Session = Depends(get_db)) -> JSONResponse:
     )
 
     if not overall_healthy:
-        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload
+        )
     return JSONResponse(status_code=status.HTTP_200_OK, content=payload)
 
 
@@ -102,7 +102,9 @@ def get_metrics() -> JSONResponse:
     if not settings.METRICS_ENABLED:
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"error": "Metrics collection is disabled (METRICS_ENABLED=false)."},
+            content={
+                "error": "Metrics collection is disabled (METRICS_ENABLED=false)."
+            },
         )
     snap = metrics_collector.snapshot()
     return JSONResponse(status_code=status.HTTP_200_OK, content=snap)

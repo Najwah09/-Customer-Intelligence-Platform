@@ -7,8 +7,8 @@ Workflow:
 """
 
 import json
-import uuid
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -57,7 +57,9 @@ class ContinuousRetrainingPipeline:
         """
         run_id = f"retrain_{uuid.uuid4().hex[:8]}"
         start_time = time.perf_counter()
-        logger.info(f"RetrainingPipeline: starting run {run_id} (trigger={trigger_type})")
+        logger.info(
+            f"RetrainingPipeline: starting run {run_id} (trigger={trigger_type})"
+        )
 
         # Step 1: Validate dataset
         data_file = dataset_path or "reports/customer_intelligence.csv"
@@ -94,7 +96,9 @@ class ContinuousRetrainingPipeline:
 
         # Step 3: Compare against current production model
         current_prod = get_production_model("churn")
-        baseline_roc = current_prod["metrics"].get("roc_auc", 0.84) if current_prod else 0.84
+        baseline_roc = (
+            current_prod["metrics"].get("roc_auc", 0.84) if current_prod else 0.84
+        )
         improved = new_metrics["roc_auc"] > baseline_roc
 
         # Step 4: Register model in Model Registry
@@ -120,7 +124,9 @@ class ContinuousRetrainingPipeline:
         if auto_promote_production and improved:
             promote("churn", new_version, "production")
             final_status = "production"
-            logger.info(f"RetrainingPipeline: auto-promoted {new_version} to production!")
+            logger.info(
+                f"RetrainingPipeline: auto-promoted {new_version} to production!"
+            )
 
         elapsed = time.perf_counter() - start_time
 
@@ -139,7 +145,9 @@ class ContinuousRetrainingPipeline:
         }
 
         self._log_run(result)
-        logger.info(f"RetrainingPipeline: completed run {run_id} -> {new_version} [{final_status}]")
+        logger.info(
+            f"RetrainingPipeline: completed run {run_id} -> {new_version} [{final_status}]"
+        )
         return result
 
     def get_history(self, limit: int = 20) -> List[Dict[str, Any]]:

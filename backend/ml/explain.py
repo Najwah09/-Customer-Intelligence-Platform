@@ -34,7 +34,9 @@ class ExplainabilityService:
                     self.shap_explainer = pickle.load(f)
                 logger.info("ExplainabilityService: Loaded SHAP explainer.")
             except Exception as e:
-                logger.warning(f"ExplainabilityService: Could not load SHAP explainer ({e}).")
+                logger.warning(
+                    f"ExplainabilityService: Could not load SHAP explainer ({e})."
+                )
 
     def get_global_importance(self) -> List[Dict[str, Any]]:
         """Return global feature importance ranking."""
@@ -42,6 +44,7 @@ class ExplainabilityService:
         if importance_path.exists():
             try:
                 import json
+
                 with open(importance_path, "r") as f:
                     return json.load(f)
             except Exception:
@@ -71,36 +74,65 @@ class ExplainabilityService:
             Dict containing waterfall data, force plot values, top drivers, base value.
         """
         # Determine values dynamically or synthesize based on attributes
-        contract = customer_data.get("contract_type", "Month-to-month") if customer_data else "Month-to-month"
-        tenure = float(customer_data.get("tenure_months", 12)) if customer_data else 12.0
-        monthly = float(customer_data.get("monthly_charges", 70.0)) if customer_data else 70.0
+        contract = (
+            customer_data.get("contract_type", "Month-to-month")
+            if customer_data
+            else "Month-to-month"
+        )
+        tenure = (
+            float(customer_data.get("tenure_months", 12)) if customer_data else 12.0
+        )
+        monthly = (
+            float(customer_data.get("monthly_charges", 70.0)) if customer_data else 70.0
+        )
 
         # Construct realistic SHAP value contributions
         shap_values = {
             "contract_type": 0.25 if contract == "Month-to-month" else -0.15,
             "tenure_months": 0.18 if tenure < 12 else -0.12,
             "monthly_charges": 0.12 if monthly > 65 else -0.05,
-            "tech_support": 0.08 if customer_data and customer_data.get("tech_support") == "No" else -0.04,
-            "online_security": 0.06 if customer_data and customer_data.get("online_security") == "No" else -0.03,
-            "payment_method": 0.05 if customer_data and customer_data.get("payment_method") == "Electronic check" else -0.02,
+            "tech_support": (
+                0.08
+                if customer_data and customer_data.get("tech_support") == "No"
+                else -0.04
+            ),
+            "online_security": (
+                0.06
+                if customer_data and customer_data.get("online_security") == "No"
+                else -0.03
+            ),
+            "payment_method": (
+                0.05
+                if customer_data
+                and customer_data.get("payment_method") == "Electronic check"
+                else -0.02
+            ),
         }
 
         base_value = 0.26  # Base dataset churn rate
 
         # Top positive/negative drivers
-        sorted_features = sorted(shap_values.items(), key=lambda x: abs(x[1]), reverse=True)
-        top_positive = [{"feature": f, "impact": round(v, 4)} for f, v in sorted_features if v > 0]
-        top_negative = [{"feature": f, "impact": round(v, 4)} for f, v in sorted_features if v < 0]
+        sorted_features = sorted(
+            shap_values.items(), key=lambda x: abs(x[1]), reverse=True
+        )
+        top_positive = [
+            {"feature": f, "impact": round(v, 4)} for f, v in sorted_features if v > 0
+        ]
+        top_negative = [
+            {"feature": f, "impact": round(v, 4)} for f, v in sorted_features if v < 0
+        ]
 
         # Waterfall data
         waterfall = []
         current = base_value
         for feat, val in sorted_features:
-            waterfall.append({
-                "feature": feat,
-                "contribution": round(val, 4),
-                "cumulative": round(current + val, 4),
-            })
+            waterfall.append(
+                {
+                    "feature": feat,
+                    "contribution": round(val, 4),
+                    "cumulative": round(current + val, 4),
+                }
+            )
             current += val
 
         return {
@@ -124,3 +156,9 @@ class ExplainabilityService:
 
 # Global ExplainabilityService instance
 explainability_service = ExplainabilityService()
+
+
+def get_shap_explanation_for_customer(customer_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper function to get SHAP explanation for a customer dictionary."""
+    cid = str(customer_data.get("customer_id", "0003-MKNFE"))
+    return explainability_service.explain_customer(cid, customer_data)

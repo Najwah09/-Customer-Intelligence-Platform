@@ -8,8 +8,8 @@ and status queries. Works with ThreadPool background worker or Redis Queue.
 import json
 import os
 import threading
-import uuid
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -72,13 +72,17 @@ class PredictionQueueManager:
             with self._lock:
                 if task_id in self._tasks:
                     self._tasks[task_id]["status"] = "completed"
-                    self._tasks[task_id]["completed_at"] = datetime.now(tz=timezone.utc).isoformat()
+                    self._tasks[task_id]["completed_at"] = datetime.now(
+                        tz=timezone.utc
+                    ).isoformat()
                     self._tasks[task_id]["result"] = res
         except Exception as e:
             with self._lock:
                 if task_id in self._tasks:
                     self._tasks[task_id]["status"] = "failed"
-                    self._tasks[task_id]["completed_at"] = datetime.now(tz=timezone.utc).isoformat()
+                    self._tasks[task_id]["completed_at"] = datetime.now(
+                        tz=timezone.utc
+                    ).isoformat()
                     self._tasks[task_id]["error"] = str(e)
 
     def _process_batch_task(self, job_id: str, customers: List[Dict[str, Any]]) -> None:
@@ -101,7 +105,9 @@ class PredictionQueueManager:
         with self._lock:
             if job_id in self._tasks:
                 self._tasks[job_id]["status"] = "completed"
-                self._tasks[job_id]["completed_at"] = datetime.now(tz=timezone.utc).isoformat()
+                self._tasks[job_id]["completed_at"] = datetime.now(
+                    tz=timezone.utc
+                ).isoformat()
                 self._tasks[job_id]["results"] = results
 
     def get_task_status(self, task_or_job_id: str) -> Optional[Dict[str, Any]]:
@@ -114,8 +120,12 @@ class PredictionQueueManager:
         with self._lock:
             total = len(self._tasks)
             queued = sum(1 for t in self._tasks.values() if t["status"] == "queued")
-            processing = sum(1 for t in self._tasks.values() if t["status"] == "processing")
-            completed = sum(1 for t in self._tasks.values() if t["status"] == "completed")
+            processing = sum(
+                1 for t in self._tasks.values() if t["status"] == "processing"
+            )
+            completed = sum(
+                1 for t in self._tasks.values() if t["status"] == "completed"
+            )
             failed = sum(1 for t in self._tasks.values() if t["status"] == "failed")
 
             return {

@@ -5,6 +5,7 @@ Defines the Contract model and mappings.
 """
 
 from sqlalchemy import Column, Integer, String
+
 from backend.database.models import Base
 
 

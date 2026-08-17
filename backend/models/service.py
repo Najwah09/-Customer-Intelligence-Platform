@@ -5,6 +5,7 @@ Defines the Service model and columns.
 """
 
 from sqlalchemy import Column, Integer, String
+
 from backend.database.models import Base
 
 

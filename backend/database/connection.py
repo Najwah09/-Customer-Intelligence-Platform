@@ -7,8 +7,10 @@ and compatibility with streaming utilities (e.g., loading large querysets).
 
 import contextlib
 from typing import Generator
+
 import psycopg2
 from psycopg2.extensions import connection as PgConnection
+
 from backend.core.logger import logger
 from backend.core.settings import settings
 
@@ -25,7 +27,9 @@ def get_raw_connection() -> Generator[PgConnection, None, None]:
         ConnectionError: If connection cannot be established.
     """
     if settings.get_db_url().startswith("sqlite"):
-        raise NotImplementedError("Raw psycopg2 connection is only supported for PostgreSQL.")
+        raise NotImplementedError(
+            "Raw psycopg2 connection is only supported for PostgreSQL."
+        )
 
     conn = None
     try:
@@ -54,7 +58,9 @@ def test_raw_connection() -> bool:
         bool: True if connection is successful, False otherwise.
     """
     if settings.get_db_url().startswith("sqlite"):
-        logger.warning("Local engine is configured for SQLite; skipping psycopg2 raw test.")
+        logger.warning(
+            "Local engine is configured for SQLite; skipping psycopg2 raw test."
+        )
         return True
 
     try:

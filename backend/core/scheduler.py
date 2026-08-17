@@ -106,9 +106,11 @@ def _run_tracked_job(job_name: str, fn, *args, **kwargs) -> None:  # type: ignor
 # Job implementations
 # ---------------------------------------------------------------------------
 
+
 def _watch_folder_scan() -> None:
     """Scan data/incoming/ for new CSV files continuously."""
     from backend.services.auto_ingestion import scan_watch_folder
+
     res = scan_watch_folder()
     if res.get("processed_files", 0) > 0 or res.get("failed_files", 0) > 0:
         logger.info(f"Scheduler: Watch folder scan complete. Res: {res}")
@@ -117,13 +119,17 @@ def _watch_folder_scan() -> None:
 def _database_auto_sync() -> None:
     """Incremental sync from PostgreSQL to ML prediction store."""
     from backend.services.auto_ingestion import run_database_auto_sync
+
     res = run_database_auto_sync()
-    logger.info(f"Scheduler: Database auto-sync complete. Status: {res.get('sync_status')}")
+    logger.info(
+        f"Scheduler: Database auto-sync complete. Status: {res.get('sync_status')}"
+    )
 
 
 def _daily_metrics_flush() -> None:
     """Flush today's in-memory metrics snapshot to disk."""
     from backend.core.metrics import metrics
+
     metrics.flush_daily_summary()
     logger.info("Scheduler: daily metrics flushed to disk.")
 
@@ -133,14 +139,18 @@ def _daily_drift_check() -> None:
     Run drift check against the latest customer_intelligence.csv report.
     Falls back gracefully if the file does not exist.
     """
+    from pathlib import Path
+
     import pandas as pd
+
     from backend.ml.drift import run_drift_check
     from backend.services.auto_ingestion import update_sync_state
-    from pathlib import Path
 
     data_path = Path("reports/customer_intelligence.csv")
     if not data_path.exists():
-        logger.warning("Scheduler: customer_intelligence.csv not found — skipping drift check.")
+        logger.warning(
+            "Scheduler: customer_intelligence.csv not found — skipping drift check."
+        )
         return
 
     df = pd.read_csv(data_path)
@@ -194,6 +204,7 @@ def _log_rotation_cleanup() -> None:
 # Scheduler singleton
 # ---------------------------------------------------------------------------
 
+
 class PlatformScheduler:
     """Wraps APScheduler with job registration and lifecycle management."""
 
@@ -233,7 +244,9 @@ class PlatformScheduler:
         )
         # Monthly model evaluation — 1st of month 02:00 UTC
         self._scheduler.add_job(
-            lambda: _run_tracked_job("monthly_retraining_check", _monthly_model_evaluation),
+            lambda: _run_tracked_job(
+                "monthly_retraining_check", _monthly_model_evaluation
+            ),
             trigger=CronTrigger(day=1, hour=2, minute=0),
             id="monthly_retraining_check",
             replace_existing=True,
@@ -266,12 +279,14 @@ class PlatformScheduler:
         jobs = []
         for job in self._scheduler.get_jobs():
             next_run = job.next_run_time
-            jobs.append({
-                "id": job.id,
-                "name": job.name,
-                "next_run": next_run.isoformat() if next_run else None,
-                "trigger": str(job.trigger),
-            })
+            jobs.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run": next_run.isoformat() if next_run else None,
+                    "trigger": str(job.trigger),
+                }
+            )
         return jobs
 
     @property

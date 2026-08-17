@@ -1,39 +1,33 @@
 """
-Recommendation Center Page - Streamlit Dashboard.
-
-Group retention actions by priority and estimate campaign financial savings.
+Retention recommendations — campaign prioritization and target lists.
 """
 
 import streamlit as st
-import pandas as pd
 
-from dashboard.components.cards import render_executive_header, render_kpi_card, render_ai_copilot_widget
+from dashboard.components.layout import inject_styles, render_page_header, render_section_header, format_currency
+from dashboard.components.cards import render_kpi_card
 from dashboard.components.filters import render_sidebar_filters
 from dashboard.components.tables import render_interactive_table
 from dashboard.components.charts import plot_recommendation_chart
 from dashboard.utils.cache import load_global_intelligence_data
 
+inject_styles()
+
 
 def render_recommendations_page():
-    """
-    Renders recommendations analytics.
-    """
-    render_executive_header(
-        title="🎯 Proactive Retention Recommendation Center",
-        subtitle="Explore rules-based upselling promotions, check priority tiers, and analyze expected financial retention savings.",
-        badge_text="AI Action Engine v1.0"
+    render_page_header(
+        title="Retention Recommendations",
+        subtitle="Review prioritized retention actions, campaign volumes, and expected value impact across the portfolio.",
+        eyebrow="Retention",
     )
 
     df_intel = load_global_intelligence_data()
-
     if df_intel.empty:
-        st.error("No analytics data loaded.")
+        st.error("Analytics data is not loaded.")
         return
 
-    # Apply global sidebar filters
     df_filtered = render_sidebar_filters(df_intel)
 
-    # Financial ROI KPI strip
     total_savings = df_filtered["estimated_revenue_saved"].sum() if not df_filtered.empty else 0.0
     crit_count = len(df_filtered[df_filtered["recommendation_priority"] == "Critical"])
     high_count = len(df_filtered[df_filtered["recommendation_priority"] == "High"])
@@ -41,26 +35,25 @@ def render_recommendations_page():
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        render_kpi_card(f"${total_savings:,.2f}", "Total Campaign ROI Savings", border_color="#10B981", trend="Net Recoverable", trend_type="positive")
+        render_kpi_card(format_currency(total_savings), "Total Retention Value", accent="success")
     with c2:
-        render_kpi_card(f"{crit_count:,}", "Critical Actions", border_color="#EF4444", trend="Immediate Outreach", trend_type="negative")
+        render_kpi_card(f"{crit_count:,}", "Critical Actions", accent="danger")
     with c3:
-        render_kpi_card(f"{high_count:,}", "High Priority Actions", border_color="#F59E0B", trend="Targeted Offer", trend_type="neutral")
+        render_kpi_card(f"{high_count:,}", "High Priority", accent="warning")
     with c4:
-        render_kpi_card(f"{med_count:,}", "Medium Priority Actions", border_color="#3B82F6", trend="Standard Plan", trend_type="positive")
+        render_kpi_card(f"{med_count:,}", "Medium Priority", accent="primary")
 
     st.divider()
 
-    # Plot recommendation volume split
+    render_section_header("Campaign Volume by Priority")
     st.plotly_chart(plot_recommendation_chart(df_filtered), use_container_width=True)
 
     st.divider()
 
-    # Campaign list explorer
-    st.subheader("📋 Campaign Targets Watchlist")
-    
+    render_section_header("Campaign Targets")
+
     unique_campaigns = ["All"] + sorted(list(df_filtered["primary_recommendation"].dropna().unique()))
-    selected_camp = st.selectbox("Filter Watchlist by Retention Campaign Type", unique_campaigns)
+    selected_camp = st.selectbox("Filter by campaign type", unique_campaigns)
 
     df_watchlist = df_filtered.copy()
     if selected_camp != "All":
@@ -68,9 +61,13 @@ def render_recommendations_page():
 
     display_cols = [
         "customer_id", "primary_recommendation", "recommendation_priority",
-        "churn_probability", "predicted_ltv", "estimated_revenue_saved"
+        "churn_probability", "predicted_ltv", "estimated_revenue_saved",
     ]
-    render_interactive_table(df_watchlist[display_cols].sort_values(by="estimated_revenue_saved", ascending=False), page_size=10, key="camp_table")
+    render_interactive_table(
+        df_watchlist[display_cols].sort_values(by="estimated_revenue_saved", ascending=False),
+        page_size=15,
+        key="camp_table",
+    )
 
 
 if __name__ == "__main__":

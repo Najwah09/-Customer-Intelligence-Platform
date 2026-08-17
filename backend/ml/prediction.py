@@ -6,8 +6,10 @@ Loads trained models from the artifacts registry to generate predictions on feat
 
 import os
 from typing import Any
+
 import joblib
 import pandas as pd
+
 from backend.core.logger import logger
 
 

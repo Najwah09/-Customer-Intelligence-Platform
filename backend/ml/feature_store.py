@@ -21,22 +21,71 @@ FEATURE_SCHEMA_V1: Dict[str, Dict[str, Any]] = {
     "partner": {"type": "categorical", "allowed": ["Yes", "No"], "default": "No"},
     "dependents": {"type": "categorical", "allowed": ["Yes", "No"], "default": "No"},
     "tenure_months": {"type": "numeric", "min": 0, "max": 120, "default": 1},
-    "contract_type": {"type": "categorical", "allowed": ["Month-to-month", "One year", "Two year"], "default": "Month-to-month"},
-    "paperless_billing": {"type": "categorical", "allowed": ["Yes", "No"], "default": "Yes"},
+    "contract_type": {
+        "type": "categorical",
+        "allowed": ["Month-to-month", "One year", "Two year"],
+        "default": "Month-to-month",
+    },
+    "paperless_billing": {
+        "type": "categorical",
+        "allowed": ["Yes", "No"],
+        "default": "Yes",
+    },
     "payment_method": {
         "type": "categorical",
-        "allowed": ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"],
-        "default": "Electronic check"
+        "allowed": [
+            "Electronic check",
+            "Mailed check",
+            "Bank transfer (automatic)",
+            "Credit card (automatic)",
+        ],
+        "default": "Electronic check",
     },
-    "phone_service": {"type": "categorical", "allowed": ["Yes", "No"], "default": "Yes"},
-    "multiple_lines": {"type": "categorical", "allowed": ["Yes", "No", "No phone service"], "default": "No"},
-    "internet_service": {"type": "categorical", "allowed": ["DSL", "Fiber optic", "No"], "default": "Fiber optic"},
-    "online_security": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
-    "online_backup": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
-    "device_protection": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
-    "tech_support": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
-    "streaming_tv": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
-    "streaming_movies": {"type": "categorical", "allowed": ["Yes", "No", "No internet service"], "default": "No"},
+    "phone_service": {
+        "type": "categorical",
+        "allowed": ["Yes", "No"],
+        "default": "Yes",
+    },
+    "multiple_lines": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No phone service"],
+        "default": "No",
+    },
+    "internet_service": {
+        "type": "categorical",
+        "allowed": ["DSL", "Fiber optic", "No"],
+        "default": "Fiber optic",
+    },
+    "online_security": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
+    "online_backup": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
+    "device_protection": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
+    "tech_support": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
+    "streaming_tv": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
+    "streaming_movies": {
+        "type": "categorical",
+        "allowed": ["Yes", "No", "No internet service"],
+        "default": "No",
+    },
     "monthly_charges": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 65.0},
     "total_charges": {"type": "numeric", "min": 0.0, "max": 50000.0, "default": 65.0},
 }
@@ -70,11 +119,17 @@ class FeatureStore:
                 try:
                     num_val = float(val)
                     if "min" in spec and num_val < spec["min"]:
-                        errors.append(f"Feature '{feature_name}' value {num_val} < min {spec['min']}")
+                        errors.append(
+                            f"Feature '{feature_name}' value {num_val} < min {spec['min']}"
+                        )
                     if "max" in spec and num_val > spec["max"]:
-                        errors.append(f"Feature '{feature_name}' value {num_val} > max {spec['max']}")
+                        errors.append(
+                            f"Feature '{feature_name}' value {num_val} > max {spec['max']}"
+                        )
                 except (ValueError, TypeError):
-                    errors.append(f"Feature '{feature_name}' expected numeric, got '{val}'")
+                    errors.append(
+                        f"Feature '{feature_name}' expected numeric, got '{val}'"
+                    )
 
             elif spec["type"] == "categorical":
                 val_str = str(val)

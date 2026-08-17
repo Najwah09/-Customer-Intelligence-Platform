@@ -6,8 +6,10 @@ implements feature transformation steps (scaling, encoding) for modeling.
 """
 
 from typing import Tuple
+
 import pandas as pd
 import pandera as pa
+
 from backend.core.logger import logger
 
 # Define Pandera validation schema for incoming customer training data
@@ -18,7 +20,9 @@ customer_schema = pa.DataFrameSchema(
         "monthly_charges": pa.Column(float, pa.Check.ge(0.0), required=True),
         "total_charges": pa.Column(float, pa.Check.ge(0.0), required=True),
         "contract_type": pa.Column(str, required=True),
-        "paperless_billing": pa.Column(str, pa.Check.isin(["Yes", "No"]), required=True),
+        "paperless_billing": pa.Column(
+            str, pa.Check.isin(["Yes", "No"]), required=True
+        ),
         "internet_service": pa.Column(str, required=True),
         "tech_support": pa.Column(str, required=True),
     },
@@ -88,7 +92,9 @@ class FeatureEngineer:
         ].copy()
 
         # Dummy one-hot mappings for contract type
-        features["is_month_to_month"] = (df_valid["contract_type"] == "Month-to-month").astype(int)
+        features["is_month_to_month"] = (
+            df_valid["contract_type"] == "Month-to-month"
+        ).astype(int)
         features["is_two_year"] = (df_valid["contract_type"] == "Two year").astype(int)
         features["has_tech_support"] = (df_valid["tech_support"] == "Yes").astype(int)
 

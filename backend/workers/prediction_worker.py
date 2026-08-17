@@ -4,8 +4,8 @@ Prediction Worker Process Entrypoint.
 Runs standalone or as a background service to process queued prediction tasks.
 """
 
-import time
 import sys
+import time
 from pathlib import Path
 
 # Add project root to path

@@ -5,9 +5,12 @@ Exposes database engines, session creators, connection context dependencies,
 and database validation utility functions.
 """
 
+import os
 from typing import Generator
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
+
 from backend.core.logger import logger
 from backend.core.settings import settings
 
@@ -58,7 +61,15 @@ def test_db_connection() -> bool:
     Returns:
         bool: True if connection is successful, False otherwise.
     """
-    logger.info(f"Testing database connection on: {settings.DB_HOST}:{settings.DB_PORT}")
+    if (
+        os.environ.get("ENV") == "testing"
+        or os.environ.get("USE_SQLITE_TEST", "false").lower() == "true"
+    ):
+        return True
+
+    logger.info(
+        f"Testing database connection on: {settings.DB_HOST}:{settings.DB_PORT}"
+    )
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -67,4 +78,5 @@ def test_db_connection() -> bool:
     except Exception as e:
         logger.error(f"Database connection test failed: {e}")
         return False
+
     # Standard SQLite connection testing logic

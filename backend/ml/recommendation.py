@@ -6,6 +6,7 @@ by evaluating customer churn risk levels and lifetime value profiles.
 """
 
 from typing import List
+
 from backend.core.logger import logger
 
 
@@ -46,16 +47,24 @@ class RecommendationEngine:
 
         if is_high_risk and is_high_value:
             # VIP Churn Risk
-            recommendations.append("Assign to VIP Dedicated Account Manager for outreach.")
+            recommendations.append(
+                "Assign to VIP Dedicated Account Manager for outreach."
+            )
             recommendations.append("Offer 20% loyalty discount on contract renewal.")
-            recommendations.append("Provide complimentary premium tech support upgrade.")
+            recommendations.append(
+                "Provide complimentary premium tech support upgrade."
+            )
         elif is_high_risk and not is_high_value:
             # Low Value Churn Risk
             recommendations.append("Trigger automated digital survey touchpoint.")
-            recommendations.append("Suggest downgrade to lower-cost tier or contract option.")
+            recommendations.append(
+                "Suggest downgrade to lower-cost tier or contract option."
+            )
         elif not is_high_risk and is_high_value:
             # VIP Safe Customer
-            recommendations.append("Evaluate eligibility for cross-selling premium products.")
+            recommendations.append(
+                "Evaluate eligibility for cross-selling premium products."
+            )
             recommendations.append("Enroll in VIP loyalty reward circle program.")
         else:
             # Safe, Normal Customer

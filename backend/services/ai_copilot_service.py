@@ -10,7 +10,9 @@ from typing import Any, Dict, List
 class AICopilotService:
     """Generates AI-driven retention strategies and financial impact summaries."""
 
-    def generate_customer_action_plan(self, customer_data: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_customer_action_plan(
+        self, customer_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Generate a personalized retention strategy based on churn probability, tenure, and monthly charges.
         """
@@ -24,7 +26,9 @@ class AICopilotService:
         if churn_prob >= 0.61:
             risk_level = "CRITICAL CHURN RISK"
             confidence = 96.4
-            primary_action = "Immediate Retention Outreach & 15% Contract Upgrade Discount"
+            primary_action = (
+                "Immediate Retention Outreach & 15% Contract Upgrade Discount"
+            )
             offer_code = "RETENTION-FIBER-15"
             estimated_roi = round(monthly_charges * 12.0 * 0.70, 2)
             recommended_steps = [

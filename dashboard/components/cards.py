@@ -1,107 +1,98 @@
 """
-Enterprise KPI Metric Cards & Hero Banner Components.
+RETAINAI — Enterprise Card Components & Recommendation Panels.
 
-Renders modern glassmorphism executive metric cards, AI copilot widgets, and linear-style headers.
+Clean, restrained, professional metric cards, headers, and analytical callouts.
 """
 
-from typing import Optional
+import html
+from typing import Any, Dict, List, Optional, Tuple
 import streamlit as st
 
 
 def render_kpi_card(
     value: str,
     label: str,
-    border_color: str = "#6366F1",
+    accent: str = "default",
     trend: Optional[str] = None,
-    trend_type: str = "positive",
+    trend_type: str = "neutral",
     subtext: Optional[str] = None,
+    border_color: Optional[str] = None,
 ):
     """
-    Render an enterprise glassmorphic metric KPI card with trend indicator and elevation.
+    Render a clean, restrained enterprise metric card.
+    Single-line HTML construction prevents Streamlit markdown code block escaping bugs.
     """
-    trend_html = ""
+    raw_label = label.replace("🔮", "").replace("👑", "").replace("🕵️", "").replace("💬", "").strip()
+    safe_label = html.escape(raw_label)
+    safe_value = html.escape(str(value))
+
+    badge_html = ""
     if trend:
-        css_class = "positive" if trend_type == "positive" else ("negative" if trend_type == "negative" else "neutral")
-        icon = "↑" if trend_type == "positive" else ("↓" if trend_type == "negative" else "•")
-        trend_html = f'<span class="kpi-trend {css_class}">{icon} {trend}</span>'
+        badge_type = "neutral"
+        if trend_type == "positive":
+            badge_type = "success"
+        elif trend_type == "negative":
+            badge_type = "danger"
+        elif trend_type == "warning":
+            badge_type = "warning"
+        safe_trend = html.escape(str(trend))
+        badge_html = f'<span class="retainai-badge retainai-badge-{badge_type}">{safe_trend}</span>'
 
-    subtext_html = f'<div class="kpi-subtext">{subtext}</div>' if subtext else ""
+    subtext_html = f'<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">{html.escape(str(subtext))}</div>' if subtext else ""
 
-    card_html = f"""
-    <div class="kpi-card" style="border-left: 4px solid {border_color};">
-        <div class="kpi-card-header">
-            <span class="kpi-label">{label}</span>
-            {trend_html}
-        </div>
-        <div class="kpi-value">{value}</div>
-        {subtext_html}
-    </div>
-    """
+    card_html = f'<div class="retainai-card"><div class="retainai-card-header"><span class="retainai-card-title">{safe_label}</span>{badge_html}</div><div class="retainai-card-value">{safe_value}</div>{subtext_html}</div>'
     st.markdown(card_html, unsafe_allow_html=True)
 
 
 def render_executive_header(
     title: str,
     subtitle: str,
-    badge_text: str = "Enterprise AI Intelligence v2.4",
+    badge_text: Optional[str] = None,
     status_online: bool = True,
 ):
-    """
-    Render Linear/Stripe style hero brand banner.
-    """
-    status_dot = '<span class="pulse-dot"></span> Online' if status_online else '<span style="color:#EF4444;">●</span> Offline'
+    """Render crisp page title banner using clean single-line HTML."""
+    raw_title = title.replace("🔮", "").replace("👑", "").replace("🕵️", "").replace("💬", "").replace("⚡", "").replace("📊", "").replace("🏆", "").replace("⚙️", "").replace("📂", "").replace("🧪", "").replace("💰", "").replace("🏥", "").replace("🔄", "").strip()
+    safe_title = html.escape(raw_title)
+    safe_subtitle = html.escape(str(subtitle))
 
-    header_html = f"""
-    <div class="brand-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div class="brand-badge">
-                ⚡ {badge_text}
-            </div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: #34D399; display: flex; align-items: center; gap: 6px;">
-                {status_dot}
-            </div>
-        </div>
-        <h1 class="brand-title">{title}</h1>
-        <p class="brand-subtitle">{subtitle}</p>
-    </div>
-    """
-    st.markdown(header_html, unsafe_allow_html=True)
+    badge_html = f'<span class="retainai-badge retainai-badge-neutral">{html.escape(str(badge_text))}</span>' if badge_text else ""
+
+    banner_html = f'<div class="retainai-header-banner"><div><h1 class="retainai-header-title">{safe_title}</h1><p class="retainai-header-subtitle">{safe_subtitle}</p></div><div>{badge_html}</div></div>'
+    st.markdown(banner_html, unsafe_allow_html=True)
+
+
+def render_ai_recommendation(text: str, label: str = "AI Recommendation") -> None:
+    """Render a clean AI recommendation panel."""
+    safe_label = html.escape(str(label))
+    safe_text = html.escape(str(text))
+    panel_html = f'<div class="retainai-ai-panel"><div class="retainai-ai-panel-title">{safe_label}</div><p class="retainai-ai-panel-text">{safe_text}</p></div>'
+    st.markdown(panel_html, unsafe_allow_html=True)
+
+
+def render_metric_panel(title: str, rows: List[Tuple[str, str]]) -> None:
+    """Render a key-value metric panel."""
+    safe_title = html.escape(str(title))
+    rows_html = "".join(
+        f'<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;"><span style="color: var(--text-secondary);">{html.escape(str(k))}</span><span style="font-weight: 500; color: var(--text-primary);">{html.escape(str(v))}</span></div>'
+        for k, v in rows
+    )
+    panel_html = f'<div class="retainai-card"><div class="retainai-card-title" style="margin-bottom: 12px;">{safe_title}</div>{rows_html}</div>'
+    st.markdown(panel_html, unsafe_allow_html=True)
+
+
+def render_strategy_recommendation(reasoning: str) -> None:
+    """Render a recommended strategy callout."""
+    render_ai_recommendation(text=reasoning, label="Recommended Retention Strategy")
 
 
 def render_ai_copilot_widget(
-    query: str = "Analyze top retention priorities for Q3...",
-    response: str = "AI Engine detected 142 high-value subscribers exhibiting early churn signals. Primary recommended action: 15% fiber upgrade discount + priority support queue.",
-    confidence: float = 94.8,
+    query: str = "",
+    response: str = "",
+    confidence: float = 0.0,
 ):
-    """
-    Render futuristic AI Assistant Copilot card with streaming prompt styling.
-    """
-    widget_html = f"""
-    <div class="ai-copilot-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <div class="ai-copilot-badge">
-                ✨ AI Intelligence Copilot
-            </div>
-            <span style="font-size: 0.78rem; background: rgba(16, 185, 129, 0.15); color: #34D399; padding: 2px 10px; border-radius: 9999px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3);">
-                {confidence}% Confidence
-            </span>
-        </div>
-        <div style="font-size: 0.85rem; color: #A5B4FC; font-weight: 600; margin-bottom: 6px;">
-            💬 Prompt: "{query}"
-        </div>
-        <div style="font-size: 0.95rem; color: #F8FAFC; line-height: 1.6; background: rgba(0, 0, 0, 0.3); padding: 14px; border-radius: 8px; border-left: 3px solid #8B5CF6;">
-            {response}
-        </div>
-        <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <span class="ai-prompt-pill">🎯 Generate Campaign Plan</span>
-            <span class="ai-prompt-pill">📈 Export Risk Cohort</span>
-            <span class="ai-prompt-pill">🔍 Anomaly Inspection</span>
-        </div>
-    </div>
-    """
-    st.markdown(widget_html, unsafe_allow_html=True)
+    """Legacy wrapper — renders clean recommendation panel."""
+    if response:
+        render_ai_recommendation(response, label="Portfolio Intelligence Summary")
 
 
-# Backward compatibility alias
-render_ai_assistant_card = render_ai_copilot_widget
-
+render_ai_assistant_card = render_ai_recommendation

@@ -7,6 +7,7 @@ Customer Intelligence Platform database schema.
 
 from datetime import datetime
 from typing import Any, Dict
+
 from sqlalchemy import Column, DateTime
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
@@ -49,7 +50,5 @@ class Base(DeclarativeBase):
             Dict[str, Any]: Dictionary representing class column values.
         """
         return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
+            column.name: getattr(self, column.name) for column in self.__table__.columns
         }
-

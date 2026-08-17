@@ -6,7 +6,9 @@ Repository pattern to isolate database interactions.
 """
 
 from typing import List, Optional
+
 from sqlalchemy.orm import Session
+
 from backend.models.customer import Customer
 
 
@@ -46,7 +48,9 @@ class CustomerRepository:
         Returns:
             Optional[Customer]: The customer if found, else None.
         """
-        return self.db.query(Customer).filter(Customer.customer_id == customer_id).first()
+        return (
+            self.db.query(Customer).filter(Customer.customer_id == customer_id).first()
+        )
 
     def list_all(self, limit: int = 100, offset: int = 0) -> List[Customer]:
         """

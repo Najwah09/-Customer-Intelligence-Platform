@@ -5,6 +5,7 @@ Defines the ImportHistory model.
 """
 
 from sqlalchemy import Column, DateTime, Integer, String
+
 from backend.database.models import Base
 
 

@@ -24,6 +24,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from backend.api.v1.router import api_router
 from backend.core import config
 from backend.core.audit import log_audit_event
 from backend.core.logger import logger, request_id_var
@@ -31,12 +32,11 @@ from backend.core.metrics import metrics as metrics_collector
 from backend.core.scheduler import platform_scheduler
 from backend.core.settings import settings
 from backend.database.database import test_db_connection
-from backend.api.v1.router import api_router
-
 
 # ---------------------------------------------------------------------------
 # Middlewares
 # ---------------------------------------------------------------------------
+
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """
@@ -90,13 +90,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
         return response
 
 
 # ---------------------------------------------------------------------------
 # Application Lifespan
 # ---------------------------------------------------------------------------
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:

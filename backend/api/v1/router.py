@@ -6,7 +6,9 @@ observability, and production deployment/scale.
 """
 
 from fastapi import APIRouter
+
 from backend.api.v1.endpoints import (
+    ai_endpoints,
     customer,
     deployment,
     health,
@@ -23,4 +25,7 @@ api_router.include_router(predict.router, tags=["predictions"])
 api_router.include_router(ingest.router, tags=["ingestion"])
 api_router.include_router(customer.router, tags=["intelligence"])
 api_router.include_router(observability.router, tags=["observability"])
-api_router.include_router(deployment.router, prefix="/api/v1" if False else "", tags=["deployment_and_scale"])
+api_router.include_router(
+    deployment.router, prefix="/api/v1" if False else "", tags=["deployment_and_scale"]
+)
+api_router.include_router(ai_endpoints.router, tags=["retainai_intelligence"])

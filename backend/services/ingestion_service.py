@@ -8,16 +8,17 @@ transforms tabular records to ORM graphs, and loads batches into PostgreSQL.
 
 from datetime import datetime
 from typing import Any, Dict
+
 import pandas as pd
 from sqlalchemy.orm import Session
 
 from backend.core.logger import logger
-from backend.ml.extractor import DataExtractor
-from backend.ml.profiling import DataProfiler
-from backend.ml.validation import DataValidator
 from backend.ml.cleaning import DataCleaner
-from backend.ml.transformer import DataTransformer
+from backend.ml.extractor import DataExtractor
 from backend.ml.loader import DataLoader
+from backend.ml.profiling import DataProfiler
+from backend.ml.transformer import DataTransformer
+from backend.ml.validation import DataValidator
 
 
 class IngestionService:
@@ -89,7 +90,9 @@ class IngestionService:
                 }
 
             # 6. TRANSFORM
-            logger.info("ETL Pipeline: Transforming tabular records to database ORM models...")
+            logger.info(
+                "ETL Pipeline: Transforming tabular records to database ORM models..."
+            )
             orm_customers = self.transformer.transform(df_clean)
 
             # 7. LOAD
@@ -99,7 +102,9 @@ class IngestionService:
             # Compile pipeline summary
             end_time = datetime.utcnow()
             pipeline_duration = (end_time - start_time).total_seconds()
-            logger.info(f"ETL Pipeline: Ingestion complete. Duration: {pipeline_duration:.2f}s.")
+            logger.info(
+                f"ETL Pipeline: Ingestion complete. Duration: {pipeline_duration:.2f}s."
+            )
 
             return {
                 "status": "success",

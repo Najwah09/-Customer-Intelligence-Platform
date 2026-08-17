@@ -8,6 +8,7 @@ or falls back to manual CSV file detection under data/raw/.
 import os
 import zipfile
 from pathlib import Path
+
 from backend.core.logger import logger
 
 
@@ -48,26 +49,46 @@ class DataExtractor:
         has_file_creds = Path("~/.kaggle/kaggle.json").expanduser().exists()
 
         if not (has_env_creds or has_file_creds):
-            logger.info("Kaggle credentials not detected in environment or ~/.kaggle/. Skipping Kaggle API download.")
+            logger.info(
+                "Kaggle credentials not detected in environment or ~/.kaggle/. Skipping Kaggle API download."
+            )
             return False
 
-        logger.info("Kaggle credentials detected. Attempting automatic download via Kaggle API...")
+        logger.info(
+            "Kaggle credentials detected. Attempting automatic download via Kaggle API..."
+        )
         os.makedirs(self.data_dir, exist_ok=True)
 
         try:
             # Try running command or importing kaggle API
             import kaggle
+
             kaggle.api.authenticate()
-            logger.info("Kaggle authentication successful. Downloading blastchar/telco-customer-churn...")
-            kaggle.api.dataset_download_files("blastchar/telco-customer-churn", path=str(self.data_dir), unzip=False)
+            logger.info(
+                "Kaggle authentication successful. Downloading blastchar/telco-customer-churn..."
+            )
+            kaggle.api.dataset_download_files(
+                "blastchar/telco-customer-churn", path=str(self.data_dir), unzip=False
+            )
             logger.info(f"Dataset downloaded to {self.zip_path}")
             return True
         except Exception as e:
-            logger.error(f"Failed download via Kaggle API library: {e}. Trying CLI fallback...")
+            logger.error(
+                f"Failed download via Kaggle API library: {e}. Trying CLI fallback..."
+            )
             try:
                 import subprocess
+
                 subprocess.run(
-                    ["kaggle", "datasets", "download", "-d", "blastchar/telco-customer-churn", "-p", str(self.data_dir)],
+                    [
+                        "kaggle",
+                        "datasets",
+                        "download",
+                        "-d",
+                        "blastchar/telco-customer-churn",
+                        "-p",
+                        str(self.data_dir),
+                    ],
                     check=True,
                 )
                 logger.info("Kaggle CLI download completed successfully.")
@@ -98,7 +119,9 @@ class DataExtractor:
                     if self.target_csv.exists():
                         os.remove(self.target_csv)
                     f.rename(self.target_csv)
-                    logger.info(f"Extracted and renamed dataset file to: {self.target_csv}")
+                    logger.info(
+                        f"Extracted and renamed dataset file to: {self.target_csv}"
+                    )
                     break
 
             # Cleanup zip file
@@ -124,7 +147,9 @@ class DataExtractor:
         logger.info("Extract stage: Starting raw dataset lookup.")
 
         if self.is_dataset_available():
-            logger.info(f"Extract stage: Raw dataset already exists at {self.target_csv}. Skipping download.")
+            logger.info(
+                f"Extract stage: Raw dataset already exists at {self.target_csv}. Skipping download."
+            )
             return self.target_csv
 
         # Try automatic download
@@ -142,7 +167,9 @@ class DataExtractor:
             if f.name != "telco_customer_churn.csv":
                 # Rename it to our standard name
                 f.rename(self.target_csv)
-                logger.info(f"Detected manually placed file. Renamed {f.name} to {self.target_csv.name}")
+                logger.info(
+                    f"Detected manually placed file. Renamed {f.name} to {self.target_csv.name}"
+                )
                 return self.target_csv
 
         # Final check

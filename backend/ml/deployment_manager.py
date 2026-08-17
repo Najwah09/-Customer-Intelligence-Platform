@@ -104,9 +104,12 @@ class DeploymentManager:
                 "target_version": target_version,
                 "traffic_percentage": percentage,
                 "stage": f"{percentage}%",
-                "started_at": state.get("canary", {}).get("started_at") or datetime.now(tz=timezone.utc).isoformat(),
+                "started_at": state.get("canary", {}).get("started_at")
+                or datetime.now(tz=timezone.utc).isoformat(),
             }
-            logger.info(f"DeploymentManager: Canary advanced to {percentage}% for {target_version}")
+            logger.info(
+                f"DeploymentManager: Canary advanced to {percentage}% for {target_version}"
+            )
         else:
             # 100% -> Complete Canary & promote to Production
             promote("churn", target_version, "production")
@@ -121,7 +124,9 @@ class DeploymentManager:
                 state["blue_model_version"] = target_version
             else:
                 state["green_model_version"] = target_version
-            logger.info(f"DeploymentManager: Canary completed! {target_version} promoted to production.")
+            logger.info(
+                f"DeploymentManager: Canary completed! {target_version} promoted to production."
+            )
 
         self._save_state(state)
         return self.get_deployment_status()
@@ -137,7 +142,9 @@ class DeploymentManager:
 
         state["active_environment"] = new_env
         self._save_state(state)
-        logger.info(f"DeploymentManager: Switched environment to {new_env.upper()} ({target_version})")
+        logger.info(
+            f"DeploymentManager: Switched environment to {new_env.upper()} ({target_version})"
+        )
         return self.get_deployment_status()
 
     def execute_rollback(self, model_name: str = "churn") -> Dict[str, Any]:
@@ -148,7 +155,11 @@ class DeploymentManager:
             new_version = res["version"]
             env = state.get("active_environment", "blue")
             state[f"{env}_model_version"] = new_version
-            state["canary"] = {"enabled": False, "traffic_percentage": 0, "stage": "Rolled Back"}
+            state["canary"] = {
+                "enabled": False,
+                "traffic_percentage": 0,
+                "stage": "Rolled Back",
+            }
             self._save_state(state)
             logger.info(f"DeploymentManager: Rolled back {model_name} to {new_version}")
 
