@@ -1,6 +1,6 @@
 # Feature Drift Report
 
-**Run Date**: 2026-08-18T11:48:17.896886+00:00
+**Run Date**: 2026-08-18T12:38:58.525660+00:00
 **Dataset Rows**: 200
 **Overall Severity**: 🚨 Critical
 **PSI Warning Threshold**: 0.1
@@ -27,16 +27,16 @@
 
 | Category | Baseline % | Production % | Shift |
 |---|---|---|---|
-| Two year | 24.07% | 22.00% | 0.0207 |
 | Month-to-month | 55.02% | 57.50% | 0.0248 |
 | One year | 20.91% | 20.50% | 0.0041 |
+| Two year | 24.07% | 22.00% | 0.0207 |
 
 ### payment_method — ✅ Normal (max shift: 0.0542)
 
 | Category | Baseline % | Production % | Shift |
 |---|---|---|---|
-| Bank transfer (automatic) | 21.92% | 16.50% | 0.0542 |
 | Electronic check | 33.58% | 31.50% | 0.0208 |
+| Bank transfer (automatic) | 21.92% | 16.50% | 0.0542 |
 | Mailed check | 22.89% | 27.50% | 0.0461 |
 | Credit card (automatic) | 21.61% | 24.50% | 0.0289 |
 
@@ -53,10 +53,10 @@
 | Category | Baseline % | Production % | Shift |
 |---|---|---|---|
 | 0-12m | 31.04% | 19.50% | 0.1154 |
-| 24-48m | 22.63% | 23.00% | 0.0037 |
 | 48-60m | 11.81% | 22.50% | 0.1069 |
-| 60m+ | 19.98% | 18.50% | 0.0148 |
 | 12-24m | 14.54% | 16.50% | 0.0196 |
+| 60m+ | 19.98% | 18.50% | 0.0148 |
+| 24-48m | 22.63% | 23.00% | 0.0037 |
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-08-18T11:48:17.896886+00:00",
+  "run_at": "2026-08-18T12:38:58.525660+00:00",
   "dataset_rows": 200,
   "overall_severity": "Critical",
   "psi_warning_threshold": 0.1,
@@ -66,11 +66,6 @@
       "max_shift": 0.024808,
       "severity": "Normal",
       "categories": {
-        "Two year": {
-          "baseline_pct": 0.2407,
-          "production_pct": 0.22,
-          "shift": 0.0207
-        },
         "Month-to-month": {
           "baseline_pct": 0.5502,
           "production_pct": 0.575,
@@ -80,6 +75,11 @@
           "baseline_pct": 0.2091,
           "production_pct": 0.205,
           "shift": 0.0041
+        },
+        "Two year": {
+          "baseline_pct": 0.2407,
+          "production_pct": 0.22,
+          "shift": 0.0207
         }
       }
     },
@@ -88,15 +88,15 @@
       "max_shift": 0.054225,
       "severity": "Normal",
       "categories": {
-        "Bank transfer (automatic)": {
-          "baseline_pct": 0.2192,
-          "production_pct": 0.165,
-          "shift": 0.0542
-        },
         "Electronic check": {
           "baseline_pct": 0.3358,
           "production_pct": 0.315,
           "shift": 0.0208
+        },
+        "Bank transfer (automatic)": {
+          "baseline_pct": 0.2192,
+          "production_pct": 0.165,
+          "shift": 0.0542
         },
         "Mailed check": {
           "baseline_pct": 0.2289,
@@ -142,25 +142,25 @@
           "production_pct": 0.195,
           "shift": 0.1154
         },
-        "24-48m": {
-          "baseline_pct": 0.2263,
-          "production_pct": 0.23,
-          "shift": 0.0037
-        },
         "48-60m": {
           "baseline_pct": 0.1181,
           "production_pct": 0.225,
           "shift": 0.1069
+        },
+        "12-24m": {
+          "baseline_pct": 0.1454,
+          "production_pct": 0.165,
+          "shift": 0.0196
         },
         "60m+": {
           "baseline_pct": 0.1998,
           "production_pct": 0.185,
           "shift": 0.0148
         },
-        "12-24m": {
-          "baseline_pct": 0.1454,
-          "production_pct": 0.165,
-          "shift": 0.0196
+        "24-48m": {
+          "baseline_pct": 0.2263,
+          "production_pct": 0.23,
+          "shift": 0.0037
         }
       }
     }
